@@ -1,0 +1,58 @@
+name: Keep Supabase DB Active
+
+on:
+  schedule:
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+
+jobs:
+  ping-database:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Keep Supabase Database Active
+      env:
+        SUPABASE_URL: ${{ secrets.DATABASE_URL }}
+        SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      run: |
+        echo "Starting Supabase keep-alive job at $(date)"
+        
+        # REST API health check
+        echo "Performing REST API health check..."
+        curl -X GET \
+          -H "apikey: $SUPABASE_ANON_KEY" \
+          -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+          -H "Content-Type: application/json" \
+          "$SUPABASE_URL/rest/v1/" \
+          --fail --silent --show-error --max-time 30
+        
+        echo "REST API health check completed"
+        
+        # Auth service ping
+        echo "Testing Auth service..."
+        curl -X GET \
+          -H "apikey: $SUPABASE_ANON_KEY" \
+          -H "Content-Type: application/json" \
+          "$SUPABASE_URL/auth/v1/settings" \
+          --fail --silent --show-error --max-time 30
+        
+        echo "Auth service test completed"
+        
+        # Storage service ping
+        echo "Testing Storage service..."
+        curl -X GET \
+          -H "apikey: $SUPABASE_ANON_KEY" \
+          -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+          "$SUPABASE_URL/storage/v1/buckets" \
+          --fail --silent --show-error --max-time 30 || echo "Storage service not configured"
+        
+        echo "Storage service test completed"
+        echo "Supabase keep-alive job completed successfully"
+        
+    - name: Log execution summary
+      run: |
+        echo "Keep-alive job completed at $(date)"
+        echo "Next execution: $(date -d '+1 day' '+%Y-%m-%d 09:00 UTC')"
