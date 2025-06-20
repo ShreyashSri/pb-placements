@@ -38,9 +38,6 @@ export function AchievementSection({ achievements, isEditable = false }: Achieve
               {achievement.description && (
                 <p className="text-sm text-muted-foreground">{achievement.description}</p>
               )}
-              <p className="text-sm text-muted-foreground">
-                {new Date(achievement.date).toLocaleDateString()}
-              </p>
             </div>
           </div>
         ))}

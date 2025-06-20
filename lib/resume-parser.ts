@@ -47,22 +47,23 @@ export async function extractTextFromPDF(pdfBuffer: ArrayBuffer): Promise<string
 }
 
 /**
+ * 
  * Uses Gemini API to analyze the resume text and extract relevant information
  */
 export async function analyzeWithGemini(text: string): Promise<ParsedResumeData> {
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
   const prompt = `
     Analyze this resume text and extract the following information in JSON format:
     1. Full name
     2. Email address
-    3. A list of technical skills and technologies
+    3. A list of technical skills and technologies [Here First find the skills section from the resume. If its not present keep it empty]
     4. The primary domain/field (e.g., Frontend Development, Data Science)
     5. Graduation year (YYYY format)
-    6. A list of notable achievements
+    6. A list of notable achievements [Dont put any dates for achievements]
     7. Work experiences (including company name, role, description, start date, end date, and if it's current)
     8. GitHub URL if present
-    9. LinkedIn URL if present
+    9. LinkedIn URL if present must be like [https://linkedin.com/in/username]
 
     Resume text:
     ${text}
