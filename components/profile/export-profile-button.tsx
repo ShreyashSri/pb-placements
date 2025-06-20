@@ -38,43 +38,28 @@ export function ExportProfileButton({ memberId, memberName, memberEmail }: Expor
   const [emailBody, setEmailBody] = useState("");
   
   const handleExportPDF = async () => {
-    try {
-      const response = await fetch("/api/export/pdf", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ memberIds: [memberId] }),
-      });
-      
-      if (!response.ok) {
-        throw new Error("Failed to generate PDF");
-      }
-      
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      
-      // Create a link and trigger download
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${memberName.replace(/\s+/g, '-').toLowerCase()}-profile.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      
-      toast({
-        title: "Export successful",
-        description: `Exported ${memberName}'s profile to PDF`,
-      });
-    } catch (error) {
-      toast({
-        title: "Export failed",
-        description: "There was an error exporting the profile. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-  
+   try {
+    const res = await fetch('/api/export/pdf', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ memberId, memberName }),
+    });
+
+    const data = await res.json();
+
+    if (!data.success) throw new Error(data.message || 'Unknown error');
+
+    const a = document.createElement('a');
+    a.href = data.resumeUrl;
+    a.download = data.filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  } catch (err) {
+    console.error('Resume download failed:', err);
+  }
+};
+
   const handleCopyEmail = () => {
     navigator.clipboard.writeText(memberEmail);
     
