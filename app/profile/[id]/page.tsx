@@ -16,6 +16,7 @@ import { AchievementSection } from "@/components/profile/achievement-section";
 import { ResumeSection } from "@/components/profile/resume-section";
 import { ExportProfileButton } from "@/components/profile/export-profile-button";
 import { EditProfileButton } from "@/components/profile/edit-profile-button";
+import { ToastProvider } from "@/components/ui/toast";
 
 interface ProfilePageProps {
   params: {
@@ -85,9 +86,8 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
             isCurrentUser={isCurrentUser}
           />
         </div>
-        
-        {/* Action Buttons */}
-        <div className="flex justify-end gap-4 mb-12">
+        <ToastProvider>
+          <div className="flex justify-end gap-4 mb-12">
           {isCurrentUser && (
             <EditProfileButton memberId={member.id} />
           )}
@@ -97,6 +97,9 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
             memberEmail={member.email}
           />
         </div>
+        </ToastProvider>
+        {/* Action Buttons */}
+        
         
         {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
