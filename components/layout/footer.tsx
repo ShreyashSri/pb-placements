@@ -120,7 +120,7 @@ export function Footer() {
                 contact@pointblank.com
               </Link>
               <p className="text-sm text-muted-foreground">
-                Have questions? We're here to help.
+                Have questions? We&apos;re here to help.
               </p>
             </div>
           </div>

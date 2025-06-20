@@ -1,24 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Check, ChevronsUpDown, Filter, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-} from "@/components/ui/command";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
 
 interface SearchFiltersProps {
   allSkills: string[];
@@ -41,8 +33,6 @@ export function SearchFilters({ allSkills, domains, years }: SearchFiltersProps)
   const [selectedSkills, setSelectedSkills] = useState<string[]>(initialSkills);
   const [selectedDomains, setSelectedDomains] = useState<string[]>(initialDomains);
   const [selectedYears, setSelectedYears] = useState<string[]>(initialYears);
-  const [domainsOpen, setDomainsOpen] = useState(false);
-  const [yearsOpen, setYearsOpen] = useState(false);
   // State for skills search
   const [skillsSearch, setSkillsSearch] = useState("");
   const [skillsOpen, setSkillsOpen] = useState(false);
@@ -69,7 +59,7 @@ export function SearchFilters({ allSkills, domains, years }: SearchFiltersProps)
   );
   
   // Apply filters
-  const applyFilters = () => {
+  const applyFilters = useCallback(() => {
     const params = new URLSearchParams();
     
     if (searchTerm) {
@@ -89,7 +79,7 @@ export function SearchFilters({ allSkills, domains, years }: SearchFiltersProps)
     });
     
     router.push(`/directory?${params.toString()}`);
-  };
+  }, [searchTerm, selectedSkills, selectedDomains, selectedYears, router]);
   
   // Clear all filters
   const clearFilters = () => {
@@ -127,13 +117,12 @@ export function SearchFilters({ allSkills, domains, years }: SearchFiltersProps)
     }, 300); // Debounce for 300ms
 
     return () => clearTimeout(timeoutId);
-  }, [searchTerm]);
+  }, [searchTerm, applyFilters]);
   
   // Apply filters whenever any filter changes
   useEffect(() => {
     applyFilters();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedSkills, selectedDomains, selectedYears]);
+  }, [applyFilters]);
   
   const hasActiveFilters = searchTerm || selectedSkills.length > 0 || selectedDomains.length > 0 || selectedYears.length > 0;
   

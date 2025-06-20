@@ -98,7 +98,7 @@ export default function SignIn() {
                 className="w-full"
                 onClick={() => router.push("/auth/sign-up")}
               >
-                Don't have an account? Sign Up
+                Don&apos;t have an account? Sign Up
               </Button>
             </CardFooter>
           </form>
