@@ -126,13 +126,15 @@ export const MemberService = {
       .select('*')
       .eq('member_id', id);
 
+
     return {
       ...member,
       skills,
       achievements: achievements || [],
       experiences: experiences || [],
       links: links || [],
-    };
+      resume_url: member.resume_url || null,
+    }
   },
 
   async searchMembers(searchTerm: string, domains: string[], years: number[], skills: string[]) {
@@ -378,3 +380,4 @@ export const LinkService = {
     return data;
   }
 };
+
