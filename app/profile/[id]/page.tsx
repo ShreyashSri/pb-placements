@@ -133,14 +133,13 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
               />
             </div>
             
-            {member.resume_url && (
+            
               <div className="bg-card rounded-lg border shadow-sm">
                 <ResumeSection 
                   resumeUrl={member.resume_url} 
                   isEditable={isCurrentUser}
                 />
               </div>
-            )}
           </div>
         </div>
       </div>
