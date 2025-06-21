@@ -37,8 +37,8 @@ export async function POST(request: NextRequest) {
     }
 
     const fileBuffer = await resumeFile.arrayBuffer();
-
     const fileName = `resume/${Date.now()}-${resumeFile.name}`;
+
     const { error: uploadError, data } = await supabase.storage
       .from('resume')
       .upload(fileName, Buffer.from(fileBuffer), {
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
         upsert: true,
       });
 
-    if (uploadError) {
+    if (uploadError || !data?.path) {
       console.error('Supabase upload error:', uploadError);
       return NextResponse.json(
         { success: false, message: 'Failed to upload to Supabase' },
@@ -54,9 +54,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const publicResumeUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/resume/${data.path}`;
+
     // Parse the resume
     const extractedText = await extractTextFromPDF(fileBuffer);
     const parsedData = await analyzeWithGemini(extractedText);
+
+    // Add resume_url to parsed data
+    parsedData.resume_url = publicResumeUrl;
+
     const uploadId = uuidv4();
 
     return NextResponse.json({

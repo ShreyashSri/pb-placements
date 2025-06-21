@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
       domain: data.domain,
       year_of_study: data.year_of_study,
       picture_url: data.picture_url || '',
-      resume_url: '',
+      resume_url: data.resume_url || '',
       created_at: new Date(),
       updated_at: new Date(),
     });
