@@ -77,7 +77,7 @@ export function Footer() {
             </nav>
           </div>
 
-          {/* Resources */}
+          {/* Resources
           <div className="flex flex-col gap-4">
             <h3 className="text-sm font-semibold">Resources</h3>
             <nav className="flex flex-col gap-2">
@@ -106,7 +106,7 @@ export function Footer() {
                 Terms of Service
               </Link>
             </nav>
-          </div>
+          </div> */}
 
           {/* Contact */}
           <div className="flex flex-col gap-4">
