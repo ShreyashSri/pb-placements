@@ -5,7 +5,7 @@ export function Footer() {
   return (
     <footer className="border-t bg-background/95">
       <div className="container px-8 py-12 md:py-16">
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
           {/* Brand Section */}
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-2 text-2xl font-bold">
@@ -68,16 +68,16 @@ export function Footer() {
               >
                 Sign In
               </Link>
-              <Link
+              {/* <Link
                 href="/auth/sign-up"
                 className="text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 Sign Up
-              </Link>
+              </Link> */}
             </nav>
           </div>
 
-          {/* Resources */}
+          {/* Resources
           <div className="flex flex-col gap-4">
             <h3 className="text-sm font-semibold">Resources</h3>
             <nav className="flex flex-col gap-2">
@@ -106,7 +106,7 @@ export function Footer() {
                 Terms of Service
               </Link>
             </nav>
-          </div>
+          </div> */}
 
           {/* Contact */}
           <div className="flex flex-col gap-4">
