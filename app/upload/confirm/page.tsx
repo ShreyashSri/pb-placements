@@ -315,6 +315,7 @@ export default function ConfirmPage() {
                         <Image
                           src={picturePreview}
                           alt="Profile preview"
+                          fill
                           className="w-full h-full object-cover"
                         />
                       ) : (
