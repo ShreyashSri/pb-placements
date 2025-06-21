@@ -27,6 +27,7 @@ interface ParsedResumeData {
   }[];
   github_url?: string;
   linkedin_url?: string;
+  resume_url?: string;
 }
 
 /**
