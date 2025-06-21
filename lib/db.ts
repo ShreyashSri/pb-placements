@@ -151,18 +151,6 @@ export const MemberService = {
           )
         `);
 
-      // Handle search term - search across multiple fields
-      if (searchTerm) {
-        const terms = searchTerm.toLowerCase().split(' ').filter(term => term.length > 0);
-        
-        // Build search conditions for each term
-        terms.forEach(term => {
-          query = query.or(
-            `name.ilike.%${term}%,email.ilike.%${term}%,domain.ilike.%${term}%`
-          );
-        });
-      }
-
       // Handle domain filters
       if (domains && domains.length > 0) {
         query = query.in('domain', domains);
@@ -186,6 +174,28 @@ export const MemberService = {
                       member.year_of_study === 3 ? '3rd' :
                       'Alumni'
       }));
+
+      // Handle search term - search across multiple fields INCLUDING skills
+      if (searchTerm) {
+        const terms = searchTerm.toLowerCase().split(' ').filter(term => term.length > 0);
+        
+        results = results.filter(member => {
+          return terms.some(term => {
+            // Search in name, email, domain
+            const searchInBasicFields = 
+              member.name?.toLowerCase().includes(term) ||
+              member.email?.toLowerCase().includes(term) ||
+              member.domain?.toLowerCase().includes(term);
+            
+            // Search in skills array
+            const searchInSkills = member.skills.some((skill: string) => 
+              skill.toLowerCase().includes(term)
+            );
+            
+            return searchInBasicFields || searchInSkills;
+          });
+        });
+      }
 
       // Filter by skills if specified
       if (skills && skills.length > 0) {
