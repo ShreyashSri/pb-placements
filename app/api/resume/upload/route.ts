@@ -60,21 +60,19 @@ export async function POST(request: NextRequest) {
     const extractedText = await extractTextFromPDF(fileBuffer);
     const parsedData = await analyzeWithGemini(extractedText);
 
+    // Add resume_url to parsed data
+    parsedData.resume_url = publicResumeUrl;
+
     const uploadId = uuidv4();
 
-    const finalParsedData = {
-  ...parsedData,
-  resume_url: publicResumeUrl,
-};
+    
 
-
-return NextResponse.json({
-  success: true,
-  id: uploadId,
-  file_path: data.path,
-  ...finalParsedData,
-});
-
+    return NextResponse.json({
+      success: true,
+      id: uploadId,
+      file_path: data.path,
+      ...parsedData,
+    });
 
   } catch (error) {
     console.error('Error processing resume:', error);
