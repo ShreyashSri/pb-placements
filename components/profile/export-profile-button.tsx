@@ -37,8 +37,8 @@ export function ExportProfileButton({ memberId, memberName, memberEmail }: Expor
   const [emailSubject, setEmailSubject] = useState(`${memberName}'s Profile from Point Blank`);
   const [emailBody, setEmailBody] = useState("");
   
-  const handleExportPDF = async () => {
-   try {
+ const handleExportPDF = async () => {
+  try {
     const res = await fetch('/api/export/pdf', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -47,18 +47,24 @@ export function ExportProfileButton({ memberId, memberName, memberEmail }: Expor
 
     const data = await res.json();
 
-    if (!data.success) throw new Error(data.message || 'Unknown error');
+    if (!res.ok || !data.success || !data.resumeUrl) {
+      throw new Error(data.message || 'Failed to generate resume download');
+    }
 
-    const a = document.createElement('a');
-    a.href = data.resumeUrl;
-    a.download = data.filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    // Trigger browser download
+    const link = document.createElement('a');
+    link.href = data.resumeUrl;
+    link.setAttribute('download', data.filename);
+    link.setAttribute('target', '_blank'); // Optional: open in new tab if not download
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   } catch (err) {
     console.error('Resume download failed:', err);
+    alert('Failed to download resume.');
   }
 };
+
 
   const handleCopyEmail = () => {
     navigator.clipboard.writeText(memberEmail);
