@@ -1,0 +1,26 @@
+name: Keep Supabase DB Active
+
+on:
+  schedule:
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+
+jobs:
+  ping-database:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Ping Supabase via PostgREST
+        env:
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY}}
+        run: |
+          response=$(curl -s \
+            -X GET "${SUPABASE_URL}/rest/v1/" \
+            -H "apikey: ${SUPABASE_ANON_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}")
+          if [ -z "$response" ]; then
+            echo "Error: empty response when pinging." >&2
+            exit 1
+          fi
+          echo "Successful ping: $response"

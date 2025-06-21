@@ -11,7 +11,7 @@ export default function UploadPage() {
       <div className="mb-8 text-center">
         <h1 className="text-3xl font-bold tracking-tight mb-2">Upload Your Resume</h1>
         <p className="text-muted-foreground max-w-2xl mx-auto">
-          Upload your resume to create or update your profile. We'll automatically parse your skills and experience.
+          Upload your resume to create or update your profile. We&apos;ll automatically parse your skills and experience.
         </p>
       </div>
       

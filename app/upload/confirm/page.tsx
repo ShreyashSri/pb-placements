@@ -1,5 +1,6 @@
 "use client";
 
+import Image from 'next/image'
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -311,7 +312,7 @@ export default function ConfirmPage() {
                   <div className="mt-2 flex items-center gap-4">
                     <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-dashed border-muted-foreground/25 hover:border-muted-foreground/50 transition-colors">
                       {picturePreview ? (
-                        <img
+                        <Image
                           src={picturePreview}
                           alt="Profile preview"
                           className="w-full h-full object-cover"

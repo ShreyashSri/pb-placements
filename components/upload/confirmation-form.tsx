@@ -182,7 +182,7 @@ export function ConfirmationForm({ parsedData }: ConfirmationFormProps) {
         <CardHeader>
           <CardTitle>Confirm Your Information</CardTitle>
           <CardDescription>
-            We've extracted information from your resume. Please review and edit as needed.
+            We&apos;ve extracted information from your resume. Please review and edit as needed.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">

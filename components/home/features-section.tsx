@@ -50,7 +50,7 @@ export function FeaturesSection() {
               </div>
               <CardTitle className="text-2xl">Search Effortlessly</CardTitle>
               <CardDescription>
-                Our powerful search engine helps you find exactly what you're looking for.
+                Our powerful search engine helps you find exactly what you&apos;re looking for.
               </CardDescription>
             </CardHeader>
             <CardContent>

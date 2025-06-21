@@ -165,7 +165,7 @@ export function ResumeUpload() {
         <CardHeader>
           <CardTitle>Upload Your Resume</CardTitle>
           <CardDescription>
-            Upload your resume to create or update your profile. We'll automatically parse your skills and experience.
+            Upload your resume to create or update your profile. We&apos;ll automatically parse your skills and experience.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -279,13 +279,13 @@ export function ResumeUpload() {
                   <div className="rounded-full bg-muted w-5 h-5 flex items-center justify-center shrink-0 mt-0.5">
                     <span className="text-xs">1</span>
                   </div>
-                  <span>We'll extract skills, experience, and achievements from your resume</span>
+                  <span>We&apos;ll extract skills, experience, and achievements from your resume</span>
                 </li>
                 <li className="flex gap-2 text-sm">
                   <div className="rounded-full bg-muted w-5 h-5 flex items-center justify-center shrink-0 mt-0.5">
                     <span className="text-xs">2</span>
                   </div>
-                  <span>You'll be able to review and edit the extracted information</span>
+                  <span>You&apos;ll be able to review and edit the extracted information</span>
                 </li>
                 <li className="flex gap-2 text-sm">
                   <div className="rounded-full bg-muted w-5 h-5 flex items-center justify-center shrink-0 mt-0.5">
