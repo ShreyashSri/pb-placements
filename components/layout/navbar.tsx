@@ -2,16 +2,13 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-<<<<<<< HEAD
 import { Code2, Search, Upload, User, Menu } from "lucide-react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-=======
-import { Code2, Search, Upload, User } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { useAuthStore } from "@/lib/authStore";
->>>>>>> 025ab83 (Added email-link auth for sign-in and updated the paths which required signin state)
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Button } from "@/components/ui/button";
+import Logo from "../ui/logo";
+import { useState } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,37 +18,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-<<<<<<< HEAD
-import { useEffect, useState } from "react";
-import Logo from "../ui/logo"; 
-=======
->>>>>>> 025ab83 (Added email-link auth for sign-in and updated the paths which required signin state)
 
 export function Navbar() {
   const user = useAuthStore((state) => state.user);
   const router = useRouter();
-<<<<<<< HEAD
-  const supabase = createClientComponentClient();
-  const [user, setUser] = useState<any>(null);
-  const [menuOpen, setMenuOpen] = useState(false);
-  
-  useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-    };
-    
-    getUser();
-    
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, [supabase.auth]);
-=======
   const pathname = usePathname();
->>>>>>> 025ab83 (Added email-link auth for sign-in and updated the paths which required signin state)
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -60,11 +32,9 @@ export function Navbar() {
     sessionStorage.clear();
     router.push("/");
   };
-<<<<<<< HEAD
-  
- 
- return (
-  <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+
+  return (
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
     <div className="flex h-16 items-center justify-between px-4 md:px-8">
       {/* Logo */}
       <div className="shrink-0 mr-4">
@@ -88,73 +58,11 @@ export function Navbar() {
             className={cn(
               "transition-colors hover:text-foreground/80",
               pathname === "/upload" ? "text-foreground" : "text-foreground/60"
-=======
-
-  return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center px-8">
-        <div className="mr-8 flex">
-          <Link href="/" className="flex items-center space-x-2">
-            <Code2 className="h-6 w-6 text-green-400" />
-            <span className="font-bold text-xl">Point Blank</span>
-          </Link>
-        </div>
-        <nav className="flex items-center space-x-6 text-sm font-medium flex-1">
-          <Link
-            href="/directory"
-            className={cn(
-              "transition-colors hover:text-foreground/80",
-              pathname === "/directory"
-                ? "text-foreground"
-                : "text-foreground/60"
->>>>>>> 025ab83 (Added email-link auth for sign-in and updated the paths which required signin state)
             )}
           >
             Upload Resume
           </Link>
-<<<<<<< HEAD
         )}
-=======
-        </nav>
-        <div className="flex items-center space-x-4">
-          {user ? (
-            <>
-              <Link href="/upload">
-                <Button className="gap-1 bg-green-500 hover:bg-green-600">
-                  <Upload className="h-4 w-4" />
-                  <span className="hidden sm:inline">Upload Resume</span>
-                </Button>
-              </Link>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <User className="h-5 w-5" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => router.push(`/profile/${user.id}`)}>
-                    My Profile
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSignOut}>
-                    Sign Out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </>
-          ) : (
-            <>
-              <Button
-                className="bg-green-500 hover:bg-green-600"
-                onClick={() => router.push("/auth/email-link-sign-in")}
-              >
-                Sign In
-              </Button>
-            </>
-          )}
-          <ThemeToggle />
-        </div>
->>>>>>> 025ab83 (Added email-link auth for sign-in and updated the paths which required signin state)
       </div>
 
       {/* Desktop right-side buttons */}
