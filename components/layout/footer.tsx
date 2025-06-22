@@ -4,7 +4,7 @@ import { Code2, Github, Linkedin, Mail, Twitter } from "lucide-react";
 export function Footer() {
   return (
     <footer className="border-t bg-background/95">
-      <div className="container px-8 py-12 md:py-16">
+      <div className="px-8 py-12 md:py-16">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
           {/* Brand Section */}
           <div className="flex flex-col gap-4">
