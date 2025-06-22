@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuthStore } from "@/lib/authStore";
 import { supabase } from "@/lib/db";
 
-export default function SignInWithLink() {
+function SignInForm() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [linkSent, setLinkSent] = useState(false);
@@ -34,7 +34,7 @@ export default function SignInWithLink() {
         description: "Click the link in your email to complete sign-in.",
       });
     }
-  }, [searchParams]);
+  }, [searchParams, toast]);
 
   useEffect(() => {
     if (user) {
@@ -120,5 +120,49 @@ export default function SignInWithLink() {
         </Card>
       </div>
     </div>
+  );
+}
+
+function SignInLoading() {
+  return (
+    <div className="min-h-screen flex flex-col justify-center items-center px-4 pb-20">
+      <div className="w-full max-w-lg">
+        <Card className="py-10 px-8">
+          <CardHeader>
+            <CardTitle>Email Link Sign-In</CardTitle>
+            <CardDescription>
+              Get a secure magic link in your inbox to sign in
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="you@example.com"
+                disabled
+              />
+            </div>
+          </CardContent>
+          <CardFooter className="flex flex-col gap-4">
+            <Button
+              className="w-full bg-green-500 hover:bg-green-600"
+              disabled
+            >
+              Loading...
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+export default function SignInWithLink() {
+  return (
+    <Suspense fallback={<SignInLoading />}>
+      <SignInForm />
+    </Suspense>
   );
 }

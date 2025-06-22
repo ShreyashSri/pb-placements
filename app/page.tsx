@@ -1,12 +1,12 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import { supabase } from "@/lib/db";
 import { useAuthStore } from "@/lib/authStore";
 import { useRouter, useSearchParams } from "next/navigation";
 import { HeroSection } from "@/components/home/hero-section";
 import { FeaturesSection } from "@/components/home/features-section";
 
-export default function UploadPage() {
+function AuthHandler() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -35,6 +35,10 @@ export default function UploadPage() {
     }
   }, [router, searchParams]);
 
+  return null;
+}
+
+function PageContent() {
   return (
     <div className="py-8 md:py-12">
       {/* <div className="mb-8 text-center">
@@ -47,5 +51,27 @@ export default function UploadPage() {
       <HeroSection />
       <FeaturesSection />
     </div>
+  );
+}
+
+function PageLoading() {
+  return (
+    <div className="container py-8 md:py-12">
+      <div className="animate-pulse">
+        <div className="h-32 bg-muted rounded mb-8"></div>
+        <div className="h-64 bg-muted rounded"></div>
+      </div>
+    </div>
+  );
+}
+
+export default function UploadPage() {
+  return (
+    <>
+      <Suspense fallback={null}>
+        <AuthHandler />
+      </Suspense>
+      <PageContent />
+    </>
   );
 }
