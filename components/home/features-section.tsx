@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 export function FeaturesSection() {
   return (
     <section className="py-16 md:py-24">
-      <div className="container px-8">
+      <div className="px-8">
         <div className="grid gap-8 md:grid-cols-3">
           {/* Looking to Hire */}
           <Card className="group relative overflow-hidden border-2 transition-all hover:border-green-400 hover:shadow-lg">
