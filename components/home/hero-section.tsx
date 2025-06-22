@@ -20,7 +20,7 @@ export function HeroSection() {
   
   return (
     <section className="py-20 md:py-28 lg:py-36">
-      <div className="container px-4 md:px-6">
+      <div className="px-4 md:px-6">
         <motion.div 
           className="flex flex-col items-center text-center space-y-8"
           initial={{ opacity: 0, y: 20 }}
