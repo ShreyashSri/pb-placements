@@ -64,13 +64,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
       {/* Banner Image */}
       <div className="relative h-48 md:h-48 bg-gradient-to-r from-green-500 to-green-600">
         <div className="absolute inset-0 bg-black/20" />
-        {isCurrentUser && (
-          <div className="absolute bottom-4 right-4">
-            <button className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg backdrop-blur-sm transition-colors">
-              Change Banner
-            </button>
-          </div>
-        )}
+        
       </div>
 
       <div className="px-8 -mt-16">
@@ -106,7 +100,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
         </div>
         
         {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
           {/* Left Column - Main Content */}
           <div className="lg:col-span-2 space-y-8">
             {experiences.length > 0 && (
