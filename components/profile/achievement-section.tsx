@@ -59,17 +59,17 @@ export function AchievementSection({
 
       <div className="space-y-4">
         {achievements.map((achievement) => (
-          <div key={achievement.id} className="flex justify-between items-start gap-4">
-            <div className="flex gap-4">
-              <div className="mt-1">
+          <div key={achievement.id} className="flex justify-between items-center">
+            <div className="flex gap-4 items-center">
+              <div >
                 <Trophy className="h-5 w-5 text-green-400" />
               </div>
               <div className="space-y-1">
-                <h3 className="font-medium">{achievement.title}</h3>
+                {/* <h3 className="font-medium">{achievement.title}</h3> */}
                 {achievement.description && (
-                  <p className="text-sm text-muted-foreground">
+                  <h3 className="text-md align-center">
                     {achievement.description}
-                  </p>
+                  </h3>
                 )}
               </div>
             </div>
