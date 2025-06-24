@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Download, Mail, Share2 } from "lucide-react";
+import { Download, Mail, Share2, Mailbox } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -30,50 +30,42 @@ interface ExportProfileButtonProps {
   memberEmail: string;
 }
 
+
 export function ExportProfileButton({ memberId, memberName, memberEmail }: ExportProfileButtonProps) {
   const { toast } = useToast();
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
   const [emailSubject, setEmailSubject] = useState(`${memberName}'s Profile from Point Blank`);
   const [emailBody, setEmailBody] = useState("");
   
-  const handleExportPDF = async () => {
-    try {
-      const response = await fetch("/api/export/pdf", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ memberIds: [memberId] }),
-      });
-      
-      if (!response.ok) {
-        throw new Error("Failed to generate PDF");
-      }
-      
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      
-      // Create a link and trigger download
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${memberName.replace(/\s+/g, '-').toLowerCase()}-profile.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      
-      toast({
-        title: "Export successful",
-        description: `Exported ${memberName}'s profile to PDF`,
-      });
-    } catch (error) {
-      toast({
-        title: "Export failed",
-        description: "There was an error exporting the profile. Please try again.",
-        variant: "destructive",
-      });
+ const handleExportPDF = async () => {
+  try {
+    const res = await fetch('/api/export/pdf', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ memberId, memberName }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.success || !data.resumeUrl) {
+      throw new Error(data.message || 'Failed to generate resume download');
     }
-  };
-  
+
+    // Trigger browser download
+    const link = document.createElement('a');
+    link.href = data.resumeUrl;
+    link.setAttribute('download', data.filename);
+    link.setAttribute('target', '_blank'); // Optional: open in new tab if not download
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  } catch (err) {
+    console.error('Resume download failed:', err);
+    alert('Failed to download resume.');
+  }
+};
+
+
   const handleCopyEmail = () => {
     navigator.clipboard.writeText(memberEmail);
     
@@ -82,35 +74,100 @@ export function ExportProfileButton({ memberId, memberName, memberEmail }: Expor
       description: `${memberEmail} copied to clipboard`,
     });
   };
+
+  const handleExportToMail = async () => {
+try {
+  const res = await fetch('/api/export/email', {
+    method: 'POST',
+    body: JSON.stringify({
+      memberId,
+      memberName,
+      memberEmail,
+      profileLink: window.location.href,
+    }),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!res.ok) {
+    const errorText = await res.text();
+    console.error(`API responded with status ${res.status}: ${errorText}`);
+    alert('Failed to generate email draft. Please try again later.');
+    return;
+  }
+
+  let data;
+  try {
+    data = await res.json();
+  } catch (jsonError) {
+    console.error('Failed to parse JSON from response:', jsonError);
+    alert('Unexpected server response. Please try again.');
+    return;
+  }
+
+  if (data.success) {
+    window.open(data.gmailDraftURL, '_blank');
+
+    if (data.resumeBase64 && data.filename) {
+      const link = document.createElement('a');
+      link.href = `data:application/pdf;base64,${data.resumeBase64}`;
+      link.download = data.filename;
+      link.click();
+    } else {
+      console.warn('Resume data missing in response.');
+    }
+  } else {
+    console.warn('API returned success: false', data.message);
+    alert(data.message || 'Something went wrong.');
+  }
+} catch (err) {
+  console.error('Request failed:', err);
+  alert('Could not contact server. Please check your network and try again.');
+}
+
+
+};
   
   const handleSendEmail = async () => {
-    try {
-      await fetch("/api/export/email", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          memberIds: [memberId],
-          subject: emailSubject,
-          body: emailBody,
-        }),
-      });
-      
-      setEmailDialogOpen(false);
-      
+  try {
+    const res = await fetch("/api/sendmail", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        memberName,
+        memberEmail,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (data.success && data.gmailDraftURL) {
+      window.open(data.gmailDraftURL, "_blank");
+
       toast({
-        title: "Email sent",
-        description: `Email sent to ${memberName}`,
+        title: "Draft ready",
+        description: `Gmail draft prepared for ${memberName}`,
       });
-    } catch (error) {
+    } else {
       toast({
-        title: "Email failed",
-        description: "There was an error sending the email. Please try again.",
+        title: "Failed to create draft",
+        description: data.message || "Unexpected error occurred",
         variant: "destructive",
       });
     }
-  };
+  } catch (error) {
+    console.error("Error generating Gmail draft:", error);
+    toast({
+      title: "Error",
+      description: "Could not generate Gmail draft. Please try again.",
+      variant: "destructive",
+    });
+  }
+};
+
   
   const handleShareProfile = () => {
     if (navigator.share) {
@@ -142,6 +199,10 @@ export function ExportProfileButton({ memberId, memberName, memberEmail }: Expor
   return (
     <div>
       <Dialog open={emailDialogOpen} onOpenChange={setEmailDialogOpen}>
+        <Button onClick={handleSendEmail} className="bg-green-500 mr-4 hover:bg-green-600 gap-2">
+              <Mail className="h-4 w-4 mr-2" />
+              Send Email
+            </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button className="bg-green-500 hover:bg-green-600 gap-2">
@@ -150,20 +211,14 @@ export function ExportProfileButton({ memberId, memberName, memberEmail }: Expor
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={handleExportToMail}>
+              <Mailbox className="h-4 w-4 mr-2"/>
+              Export to Email
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={handleExportPDF}>
               <Download className="h-4 w-4 mr-2" />
               Export as PDF
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleCopyEmail}>
-              <Mail className="h-4 w-4 mr-2" />
-              Copy Email
-            </DropdownMenuItem>
-            <DialogTrigger asChild>
-              <DropdownMenuItem>
-                <Mail className="h-4 w-4 mr-2" />
-                Send Email
-              </DropdownMenuItem>
-            </DialogTrigger>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleShareProfile}>
               <Share2 className="h-4 w-4 mr-2" />

@@ -40,6 +40,7 @@ interface ParsedData {
   }[];
   github_url?: string;
   linkedin_url?: string;
+  resume_url?: string;
 }
 
 const supabase = createClient(
@@ -63,6 +64,7 @@ export default function ConfirmPage() {
     year_of_study: "",
     github_url: "",
     linkedin_url: "",
+    resume_url: "",
     experiences: [] as ParsedData['experiences'],
     achievements: [] as string[],
   });
@@ -83,6 +85,7 @@ export default function ConfirmPage() {
         experiences: data.experiences || [],
         github_url: data.github_url || '',
         linkedin_url: data.linkedin_url || '',
+        resume_url: data.resume_url || '',
       });
       setFormData({
         name: data.name || '',
@@ -93,6 +96,7 @@ export default function ConfirmPage() {
         linkedin_url: data.linkedin_url ? (data.linkedin_url.startsWith('http') ? data.linkedin_url : `https://${data.linkedin_url}`) : '',
         experiences: data.experiences || [],
         achievements: data.achievements || [],
+        resume_url: data.resume_url || '',
       });
       setLoading(false);
     } else {
@@ -209,6 +213,7 @@ export default function ConfirmPage() {
         domain: formData.domain.trim(),
         year_of_study: formData.year_of_study ? parseInt(formData.year_of_study) : null,
         picture_url: pictureUrl,
+        resume_url: formData.resume_url,
       };
       console.log('Saving member data:', memberPayload);
       
@@ -315,6 +320,7 @@ export default function ConfirmPage() {
                         <Image
                           src={picturePreview}
                           alt="Profile preview"
+                          fill
                           className="w-full h-full object-cover"
                         />
                       ) : (
