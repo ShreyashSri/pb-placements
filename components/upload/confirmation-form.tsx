@@ -149,7 +149,7 @@ export function ConfirmationForm({ parsedData }: ConfirmationFormProps) {
       
     } catch (error) {
       toast({
-        title: "Update failed",
+        title: "Profile update failed",
         description: "There was an error updating your profile. Please try again.",
         variant: "destructive",
       });

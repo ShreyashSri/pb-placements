@@ -69,6 +69,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
+      message: 'Resume uploaded and parsed successfully.',
       id: uploadId,
       file_path: data.path,
       ...parsedData,

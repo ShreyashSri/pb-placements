@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
     // 6. Revalidate cache for the profile page
     revalidatePath(`/profile/${member.id}`);
 
-    return NextResponse.json({ message: 'Profile updated successfully' });
+    return NextResponse.json({ message: 'Profile updated successfully' }, { status: 200 });
 
   } catch (error) {
     console.error('Error updating profile:', error);
