@@ -93,7 +93,7 @@ export function Navbar() {
           </>
         )}
 
-        <ThemeToggle />
+        {/* <ThemeToggle /> */}
       </div>
 
       {/* Mobile hamburger */}
@@ -155,7 +155,7 @@ export function Navbar() {
             </Button>
           </>
         )}
-        <ThemeToggle />
+        {/* <ThemeToggle /> */}
       </div>
     )}
   </header>
