@@ -4,21 +4,11 @@ import Image from 'next/image'
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { v4 as uuidv4 } from 'uuid';
 import { createClient } from '@supabase/supabase-js';
-import { Separator } from "@/components/ui/separator";
-import { Plus, Trash, Upload } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -28,6 +18,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { motion } from "framer-motion";
+import {
+  Upload,
+  X,
+  PlusCircle,
+  Loader2,
+  Trash
+} from "lucide-react";
 
 interface ParsedData {
   id: string;
@@ -66,6 +65,7 @@ function ConfirmPageContent() {
   const [picturePreview, setPicturePreview] = useState<string | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [existingMemberId, setExistingMemberId] = useState<string | null>(null);
+  const [newSkill, setNewSkill] = useState("");
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -254,25 +254,19 @@ function ConfirmPageContent() {
   };
 
   const addSkill = () => {
-    setFormData(prev => ({
-      ...prev,
-      skills: [...prev.skills, '']
-    }));
+    if (newSkill.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        skills: [...prev.skills, newSkill.trim()]
+      }));
+      setNewSkill("");
+    }
   };
 
   const removeSkill = (index: number) => {
     setFormData(prev => ({
       ...prev,
       skills: prev.skills.filter((_, i) => i !== index)
-    }));
-  };
-
-  const handleSkillChange = (index: number, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      skills: prev.skills.map((skill, i) => 
-        i === index ? value : skill
-      )
     }));
   };
 
@@ -370,335 +364,282 @@ function ConfirmPageContent() {
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <div className="p-6 text-white">Loading profile...</div>;
   }
 
   return (
-    <div className="container py-8 md:py-12">
-      <div className="mb-8 text-center">
-        <h1 className="text-3xl font-bold tracking-tight mb-2">Confirm Your Profile</h1>
-        <p className="text-muted-foreground max-w-2xl mx-auto">
-          Review and confirm the information we extracted from your resume.
-        </p>
-      </div>
+    <div className="min-h-screen px-6 py-10 text-white bg-[#010303] flex justify-center items-start">
+      <motion.div 
+        className="w-full max-w-3xl rounded-2xl p-8 shadow-xl border border-white/10 bg-white/10 backdrop-blur-md"
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+      >
+        <h1 className="text-4xl font-bold mb-6 text-center">Confirm Your Profile</h1>
 
-      <form onSubmit={handleSubmit} className="max-w-xl mx-auto">
-        <Card>
-          <CardHeader>
-            <CardTitle>Profile Information</CardTitle>
-            <CardDescription>
-              Please review and update your information before creating your profile.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Basic Information */}
-            <div className="space-y-4">
-              <h3 className="font-medium">Basic Information</h3>
-              
-              {/* Profile Picture Upload */}
-              <div className="flex items-start gap-4 mb-4">
-                <div className="flex-1">
-                  <Label htmlFor="profile-picture">Profile Picture</Label>
-                  <div className="mt-2 flex items-center gap-4">
-                    <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-dashed border-muted-foreground/25 hover:border-muted-foreground/50 transition-colors">
-                      {picturePreview ? (
-                        <Image
-                          src={picturePreview}
-                          alt="Profile preview"
-                          fill
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-muted">
-                          <Upload className="w-8 h-8 text-muted-foreground" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <Input
-                        id="profile-picture"
-                        type="file"
-                        accept="image/*"
-                        onChange={handlePictureChange}
-                        className="cursor-pointer"
-                      />
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Upload a profile picture (max 5MB)
-                      </p>
-                    </div>
+        <form onSubmit={handleSubmit}>
+          {/* Picture Upload */}
+          <div className="flex items-center gap-6 mb-6">
+            <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-white/20 relative bg-white/10">
+              {picturePreview
+                ? <Image src={picturePreview} alt="Profile" fill className="object-cover" />
+                : <div className="w-full h-full flex items-center justify-center text-white/50">
+                    <Upload className="w-6 h-6" />
                   </div>
-                </div>
-              </div>
+              }
+            </div>
+            <div className="flex-1">
+              <Label>Upload Picture</Label>
+              <Input 
+                type="file" 
+                accept="image/*" 
+                onChange={handlePictureChange}
+                className="bg-white/10 text-white border border-white/20" 
+              />
+            </div>
+          </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Name</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, name: e.target.value }))
-                    }
-                    required
-                  />
-                </div>
+          {/* Basic Info */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div>
+              <Label>Name</Label>
+              <Input 
+                value={formData.name} 
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="bg-white/10 text-white border border-white/20"
+                required
+              />
+            </div>
+            <div>
+              <Label>Email</Label>
+              <Input 
+                type="email"
+                value={formData.email} 
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                className="bg-white/10 text-white border border-white/20"
+                required
+              />
+            </div>
+            <div>
+              <Label>Domain</Label>
+              <Input 
+                value={formData.domain} 
+                onChange={(e) => setFormData({ ...formData, domain: e.target.value })}
+                className="bg-white/10 text-white border border-white/20"
+              />
+            </div>
+            <div>
+              <Label>Year</Label>
+              <Select value={formData.year_of_study} onValueChange={(value) => setFormData({ ...formData, year_of_study: value })}>
+                <SelectTrigger className="bg-white/10 text-white border border-white/20">
+                  <SelectValue placeholder="Select year" />
+                </SelectTrigger>
+                <SelectContent>
+                  {["1", "2", "3", "4"].map((y) => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>GitHub URL</Label>
+              <Input 
+                type="url"
+                value={formData.github_url} 
+                onChange={(e) => setFormData({ ...formData, github_url: e.target.value })}
+                className="bg-white/10 text-white border border-white/20"
+                placeholder="https://github.com/username"
+              />
+            </div>
+            <div>
+              <Label>LinkedIn URL</Label>
+              <Input 
+                type="url"
+                value={formData.linkedin_url} 
+                onChange={(e) => setFormData({ ...formData, linkedin_url: e.target.value })}
+                className="bg-white/10 text-white border border-white/20"
+                placeholder="https://linkedin.com/in/username"
+              />
+            </div>
+          </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, email: e.target.value }))
-                    }
-                    required
-                  />
-                </div>
+          {/* Skills */}
+          <div className="mb-8">
+            <Label>Skills</Label>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {formData.skills.map((skill, index) => (
+                <Badge key={index} variant="outline" className="bg-green-500/20 text-green-400 hover:bg-green-500/30">
+                  {skill}
+                  <button type="button" onClick={() => removeSkill(index)} className="ml-2">
+                    <X className="w-3 h-3" />
+                  </button>
+                </Badge>
+              ))}
+            </div>
+            <div className="flex gap-2 mt-3">
+              <Input 
+                value={newSkill} 
+                onChange={(e) => setNewSkill(e.target.value)} 
+                placeholder="Add skill"
+                className="bg-white/10 text-white border border-white/20" 
+              />
+              <Button type="button" onClick={addSkill} className="bg-green-500 hover:bg-green-600 text-white">
+                <PlusCircle className="w-4 h-4 mr-1" /> Add
+              </Button>
+            </div>
+          </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="domain">Domain</Label>
-                  <Input
-                    id="domain"
-                    value={formData.domain}
-                    onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, domain: e.target.value }))
-                    }
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="year">Year of Study</Label>
-                  <Select
-                    value={formData.year_of_study}
-                    onValueChange={(value) => setFormData((prev) => ({ ...prev, year_of_study: value }))}
+          {/* Work Experience */}
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold mb-4">Work Experience</h2>
+            <div className="space-y-6">
+              {formData.experiences.map((exp, index) => (
+                <div key={index} className="rounded-lg p-6 border border-white/10 bg-transparent space-y-4 relative">
+                  <button 
+                    type="button"
+                    onClick={() => removeExperience(index)}
+                    className="absolute top-4 right-4 text-zinc-500 hover:text-red-500"
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select year of study" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">1</SelectItem>
-                      <SelectItem value="2">2</SelectItem>
-                      <SelectItem value="3">3</SelectItem>
-                      <SelectItem value="4">4</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="github_url">GitHub URL</Label>
-                  <Input
-                    id="github_url"
-                    type="url"
-                    value={formData.github_url}
-                    onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, github_url: e.target.value }))
-                    }
-                    placeholder="https://github.com/username"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="linkedin_url">LinkedIn URL</Label>
-                  <Input
-                    id="linkedin_url"
-                    type="url"
-                    value={formData.linkedin_url}
-                    onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, linkedin_url: e.target.value }))
-                    }
-                    placeholder="https://linkedin.com/in/username"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Skills Section */}
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <Label>Skills</Label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={addSkill}
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  Add Skill
-                </Button>
-              </div>
-              <div className="space-y-2">
-                {formData.skills.map((skill, index) => (
-                  <div key={index} className="flex gap-2">
-                    <Input
-                      value={skill}
-                      onChange={(e) => handleSkillChange(index, e.target.value)}
-                      placeholder="Enter your skill"
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => removeSkill(index)}
-                    >
-                      <Trash className="h-4 w-4" />
-                    </Button>
+                    <Trash className="w-4 h-4" />
+                  </button>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-sm font-medium text-zinc-400">Role</Label>
+                      <Input 
+                        value={exp.role} 
+                        onChange={(e) => handleExperienceChange(index, "role", e.target.value)} 
+                        className="bg-transparent border-white/10"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium text-zinc-400">Company</Label>
+                      <Input 
+                        value={exp.company} 
+                        onChange={(e) => handleExperienceChange(index, "company", e.target.value)} 
+                        className="bg-transparent border-white/10"
+                      />
+                    </div>
                   </div>
-                ))}
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Experiences Section */}
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <Label>Work Experience</Label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={addExperience}
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  Add Experience
-                </Button>
-              </div>
-              <div className="space-y-4">
-                {formData.experiences.map((exp, index) => (
-                  <div key={index} className="p-4 bg-muted/50 rounded-lg space-y-4">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1 space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label>Company</Label>
-                            <Input
-                              value={exp.company}
-                              onChange={(e) => handleExperienceChange(index, 'company', e.target.value)}
-                              placeholder="Company name"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label>Role</Label>
-                            <Input
-                              value={exp.role}
-                              onChange={(e) => handleExperienceChange(index, 'role', e.target.value)}
-                              placeholder="Job title"
-                            />
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Description</Label>
-                          <Textarea
-                            value={exp.description}
-                            onChange={(e) => handleExperienceChange(index, 'description', e.target.value)}
-                            placeholder="Describe your responsibilities and achievements"
-                            rows={3}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-sm font-medium text-zinc-400">Start Date</Label>
+                      <Input 
+                        type="date"
+                        value={exp.start_date} 
+                        onChange={(e) => handleExperienceChange(index, "start_date", e.target.value)} 
+                        className="bg-transparent border-white/10"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium text-zinc-400">End Date</Label>
+                      <div className="flex gap-2">
+                        <Input 
+                          type="date"
+                          value={exp.end_date || ''} 
+                          onChange={(e) => handleExperienceChange(index, "end_date", e.target.value)} 
+                          className="bg-transparent border-white/10"
+                          disabled={exp.is_current}
+                        />
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`current-${index}`}
+                            checked={exp.is_current}
+                            onCheckedChange={(checked) => 
+                              handleExperienceChange(index, 'is_current', checked as boolean)
+                            }
                           />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label>Start Date</Label>
-                            <Input
-                              type="date"
-                              value={exp.start_date}
-                              onChange={(e) => handleExperienceChange(index, 'start_date', e.target.value)}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label>End Date</Label>
-                            <div className="flex gap-2">
-                              <Input
-                                type="date"
-                                value={exp.end_date || ''}
-                                onChange={(e) => handleExperienceChange(index, 'end_date', e.target.value)}
-                                disabled={exp.is_current}
-                              />
-                              <div className="flex items-center space-x-2">
-                                <Checkbox
-                                  id={`current-${index}`}
-                                  checked={exp.is_current}
-                                  onCheckedChange={(checked) => 
-                                    handleExperienceChange(index, 'is_current', checked as boolean)
-                                  }
-                                />
-                                <Label htmlFor={`current-${index}`}>Current</Label>
-                              </div>
-                            </div>
-                          </div>
+                          <Label htmlFor={`current-${index}`}>Current</Label>
                         </div>
                       </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removeExperience(index)}
-                        className="ml-2"
-                      >
-                        <Trash className="h-4 w-4" />
-                      </Button>
                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Achievements Section */}
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <Label>Achievements</Label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={addAchievement}
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  Add Achievement
-                </Button>
-              </div>
-              <div className="space-y-2">
-                {formData.achievements.map((achievement, index) => (
-                  <div key={index} className="flex gap-2">
-                    <Input
-                      value={achievement}
-                      onChange={(e) => handleAchievementChange(index, e.target.value)}
-                      placeholder="Enter your achievement"
+                  <div>
+                    <Label className="text-sm font-medium text-zinc-400">Description</Label>
+                    <Textarea 
+                      value={exp.description} 
+                      onChange={(e) => handleExperienceChange(index, "description", e.target.value)} 
+                      className="bg-transparent border-white/10 min-h-[100px] resize-none"
+                      rows={3}
                     />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => removeAchievement(index)}
-                    >
-                      <Trash className="h-4 w-4" />
-                    </Button>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="mt-4 border-white/10 text-white"
+                onClick={addExperience}
+              >
+                + Add Experience
+              </Button>
             </div>
-          </CardContent>
-          <CardFooter className="flex justify-between">
-            <Button
+          </div>
+
+          {/* Achievements */}
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold mb-4">Achievements</h2>
+            <div className="space-y-3">
+              {formData.achievements.map((achievement, index) => (
+                <div key={index} className="flex items-start gap-3 group">
+                  <span className="text-zinc-400 mt-2 text-sm">•</span>
+                  <div className="flex-1 flex items-start gap-2">
+                    <Textarea 
+                      value={achievement} 
+                      onChange={(e) => handleAchievementChange(index, e.target.value)} 
+                      className="bg-white/10 text-white border border-white/20 resize-none min-h-0 py-2"
+                      rows={1}
+                      style={{
+                        height: 'auto',
+                        minHeight: '2.5rem'
+                      }}
+                      onInput={(e) => {
+                        const target = e.target as HTMLTextAreaElement;
+                        target.style.height = 'auto';
+                        target.style.height = `${target.scrollHeight}px`;
+                      }}
+                    />
+                    <button 
+                      type="button"
+                      onClick={() => removeAchievement(index)}
+                      className="mt-2 text-zinc-500 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                    >
+                      <Trash className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <Button 
+              type="button" 
+              variant="outline" 
+              className="mt-4 border-white/10 text-white"
+              onClick={addAchievement}
+            >
+              + Add Achievement
+            </Button>
+          </div>
+
+          {/* Submit */}
+          <div className="mt-10 flex justify-end gap-4">
+            <Button 
               type="button"
-              variant="outline"
+              variant="outline" 
               onClick={() => router.push("/upload")}
             >
               Back
             </Button>
-            <Button type="submit" disabled={saving}>
+            <Button 
+              type="submit" 
+              disabled={saving} 
+              className="bg-green-500 hover:bg-green-600 text-white"
+            >
+              {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               {saving 
                 ? (isEditMode ? "Updating Profile..." : "Creating Profile...") 
                 : (isEditMode ? "Update Profile" : "Create Profile")
               }
             </Button>
-          </CardFooter>
-        </Card>
-      </form>
+          </div>
+        </form>
+      </motion.div>
     </div>
   );
 }
