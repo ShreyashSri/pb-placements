@@ -185,8 +185,8 @@ export function ConfirmationForm({ parsedData }: ConfirmationFormProps) {
   ];
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8 max-w-2xl mx-auto">
-      <Card>
+    <form onSubmit={handleSubmit} className="space-y-8 w-full px-4">
+      <Card className="w-full">
         <CardHeader>
           <CardTitle>Confirm Your Information</CardTitle>
           <CardDescription>
@@ -362,3 +362,9 @@ export function ConfirmationForm({ parsedData }: ConfirmationFormProps) {
     </form>
   );
 }
+<style jsx global>{`
+  header, footer {
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+`}</style>
