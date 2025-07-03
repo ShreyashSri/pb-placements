@@ -6,7 +6,6 @@ import { Code2, Search, Upload, User, Menu } from "lucide-react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { supabase } from "@/lib/supabaseClient";
 import { useAuthStore } from "@/lib/authStore";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -93,7 +92,7 @@ export function Navbar() {
           </>
         )}
 
-        <ThemeToggle />
+       
       </div>
 
       {/* Mobile hamburger */}
@@ -155,7 +154,7 @@ export function Navbar() {
             </Button>
           </>
         )}
-        <ThemeToggle />
+        
       </div>
     )}
   </header>
