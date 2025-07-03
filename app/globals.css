@@ -80,3 +80,29 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Animated gradient blobs for hero section background */
+.gradient-blob {
+  position: absolute;
+  width: 40vw;
+  height: 40vw;
+  min-width: 300px;
+  min-height: 300px;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.6;
+  mix-blend-mode: lighten;
+  animation: moveBlobs 12s ease-in-out infinite alternate;
+}
+
+@keyframes moveBlobs {
+  0% {
+    transform: translateY(0px) scale(1);
+  }
+  50% {
+    transform: translateY(-60px) scale(1.1);
+  }
+  100% {
+    transform: translateY(40px) scale(0.95);
+  }
+}
