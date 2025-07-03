@@ -7,11 +7,6 @@ import { HeroSection } from "@/components/home/hero-section";
 import { FeaturesSection } from "@/components/home/features-section";
 import { AnimatedGradientBackground } from '@/components/ui/animated-gradient-background';
 
-export const metadata = { 
-  title: "Student discovery system | Point Blank",
-  description: "Upload your resume to create or update your profile on Point Blank",
-};
-
 function AuthHandler() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -57,7 +52,6 @@ function PageContent() {
         <div className="py-8 md:py-12">
           <HeroSection />
         </div>
-        {/* Features section without background image */}
         <div className="py-8 md:py-12">
           <FeaturesSection />
         </div>
