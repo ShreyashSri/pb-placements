@@ -194,16 +194,6 @@ export function SearchFilters({ allSkills, domains, years }: SearchFiltersProps)
               </div>
             </PopoverContent>
           </Popover>
-          {/* Show selected skill as badge with clear button */}
-          {selectedSkills[0] && (
-            <Badge variant="secondary" className="flex items-center gap-1 ml-2">
-              {selectedSkills[0]}
-              <button onClick={() => setSelectedSkills([])}>
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          )}
-
           {/* Domain Popover with Search Bar and List */}
           <Popover open={domainOpen} onOpenChange={setDomainOpen}>
             <PopoverTrigger asChild>
@@ -246,16 +236,6 @@ export function SearchFilters({ allSkills, domains, years }: SearchFiltersProps)
               </div>
             </PopoverContent>
           </Popover>
-          {/* Show selected domain as badge with clear button */}
-          {selectedDomains[0] && (
-            <Badge variant="secondary" className="flex items-center gap-1 ml-2">
-              {selectedDomains[0]}
-              <button onClick={() => setSelectedDomains([])}>
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          )}
-
           {/* Year Popover with Search Bar and List */}
           <Popover open={yearOpen} onOpenChange={setYearOpen}>
             <PopoverTrigger asChild>
@@ -298,27 +278,6 @@ export function SearchFilters({ allSkills, domains, years }: SearchFiltersProps)
               </div>
             </PopoverContent>
           </Popover>
-          {/* Show selected year as badge with clear button */}
-          {selectedYears[0] && (
-            <Badge variant="secondary" className="flex items-center gap-1 ml-2">
-              {selectedYears[0]}
-              <button onClick={() => setSelectedYears([])}>
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          )}
-
-          {hasActiveFilters && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={clearFilters}
-              className="shrink-0"
-            >
-              <X className="h-4 w-4" />
-              <span className="sr-only">Clear filters</span>
-            </Button>
-          )}
         </div>
       </div>
       {/* Active Filters Display */}
