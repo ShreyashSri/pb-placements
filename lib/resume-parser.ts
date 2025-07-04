@@ -25,10 +25,13 @@ interface ParsedResumeData {
     end_date: string | null;
     is_current: boolean;
   }[];
+  certifications: {
+    name: string;
+    issuing_organization?: string;
+  }[];
   github_url?: string;
   linkedin_url?: string;
   resume_url?: string;
-  resume_filename?: string;
 }
 
 /**
@@ -60,12 +63,13 @@ export async function analyzeWithGemini(text: string): Promise<ParsedResumeData>
     1. Full name
     2. Email address
     3. A list of technical skills and technologies [Here First find the skills section from the resume. If its not present keep it empty]
-    4. The primary domain/field (e.g., Frontend Development, Data Science)
+    4. The primary domain/field analyse it effectively after analysing the skillset and projects (e.g., Frontend Development,cybersecurity,backend development,devops,Data Science etc)
     5. Graduation year (YYYY format)
-    6. A list of notable achievements [Dont put any dates for achievements]
-    7. Work experiences (including company name, role, description, start date, end date, and if it's current)
-    8. GitHub URL if present
-    9. LinkedIn URL if present must be like [https://linkedin.com/in/username]
+    6. A list of notable achievements, take it from the achievements section of resume [Dont put any dates for achievements]
+    7. Work experiences take it from the experience section of the resume (including company name, role, description, start date, end date, and if it's current)
+    8. Certifications take it from the certifications section of the resume (including certification name, issuing organization)
+    9. GitHub URL if present
+    10. LinkedIn URL if present must be like [https://linkedin.com/in/username]
 
     Resume text:
     ${text}
@@ -87,6 +91,12 @@ export async function analyzeWithGemini(text: string): Promise<ParsedResumeData>
           "end_date": "YYYY-MM-DD or null",
           "is_current": boolean
         }
+      ],
+      "certifications": [
+        {
+          "name": "certification name",
+          "issuing_organization": "issuing organization",
+          }
       ],
       "github_url": "github profile url or null",
       "linkedin_url": "linkedin profile url or null"
@@ -121,6 +131,7 @@ export async function analyzeWithGemini(text: string): Promise<ParsedResumeData>
       year: yearOfStudy,
       achievements: parsed.achievements || [],
       experiences: parsed.experiences || [],
+      certifications: parsed.certifications || [],
       github_url: parsed.github_url,
       linkedin_url: parsed.linkedin_url
     };
@@ -134,6 +145,7 @@ export async function analyzeWithGemini(text: string): Promise<ParsedResumeData>
       year: undefined,
       achievements: [],
       experiences: [],
+      certifications: [],
       github_url: undefined,
       linkedin_url: undefined
     };

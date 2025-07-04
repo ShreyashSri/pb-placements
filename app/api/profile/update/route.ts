@@ -6,6 +6,7 @@ import {
   ExperienceService,
   AchievementService,
   LinkService,
+  CertificationService,
 } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 
@@ -39,6 +40,7 @@ export async function POST(req: NextRequest) {
       experiences = [],
       achievements = [],
       links = [],
+      certifications = [],
       resume_url,
       isUpdate = false
     } = await req.json();
@@ -94,6 +96,25 @@ export async function POST(req: NextRequest) {
         )
       );
     }
+     // 6. Clear and re-insert certifications (like achievements)
+    await CertificationService.removeCertificationsByMemberId(member.id);
+    if (certifications && certifications.length > 0) {
+      const certsToInsert = (certifications as any[])
+        .filter((cert: any) => cert.name && cert.name.trim())
+        .map((cert: any) => {
+          const obj: any = {
+            name: cert.name,
+            member_id: member.id,
+          };
+          if (cert.issuing_organization && cert.issuing_organization.trim() !== '') {
+            obj.issuing_organization = cert.issuing_organization;
+          }
+          // Do NOT include id for any row (let DB generate it)
+          return obj;
+        });
+      await CertificationService.createCertifications(certsToInsert);
+    }
+
 
     const userFolder = `resumes/${user.id}`;
     const { data: resumeFiles } = await supabase.storage

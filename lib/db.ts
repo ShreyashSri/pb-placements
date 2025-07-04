@@ -54,6 +54,13 @@ export interface Link {
   url: string;
 }
 
+export interface Certification {
+  id: string;
+  member_id: string;
+  name: string;
+  issuing_organization?: string;
+}
+
 // Initialize database tables if they don't exist
 export async function initializeDatabase() {
   try {
@@ -126,6 +133,11 @@ export const MemberService = {
       .select('*')
       .eq('member_id', id);
 
+      // Fetch certifications
+    const { data: certifications } = await supabase
+      .from('certifications')
+      .select('*')
+      .eq('member_id', id);
 
     return {
       ...member,
@@ -133,6 +145,7 @@ export const MemberService = {
       achievements: achievements || [],
       experiences: experiences || [],
       links: links || [],
+      certifications: certifications || [],
       resume_url: member.resume_url || null,
     }
   },
@@ -251,6 +264,48 @@ export const MemberService = {
     
     if (error) throw error;
     return data;
+  }
+};
+
+// Certification operations
+export const CertificationService = {
+  async getMemberCertifications(memberId: string) {
+    const { data, error } = await supabase
+      .from('certifications')
+      .select('*')
+      .eq('member_id', memberId);
+
+    if (error) throw error;
+    return data || [];
+  },
+
+  async createCertification(certification: Omit<Certification, 'id' | 'created_at'>) {
+    const { data, error } = await supabase
+      .from('certifications')
+      .insert(certification)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async createCertifications(certifications: Omit<Certification, 'id' | 'created_at'>[]) {
+    const { data, error } = await supabase
+      .from('certifications')
+      .insert(certifications)
+      .select();
+    if (error) throw error;
+    return data;
+  },
+
+  async removeCertificationsByMemberId(memberId: string) {
+    const { error } = await supabase
+      .from('certifications')
+      .delete()
+      .eq('member_id', memberId);
+
+    if (error) throw error;
   }
 };
 

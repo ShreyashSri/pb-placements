@@ -7,25 +7,27 @@ import {
   SkillService, 
   ExperienceService, 
   AchievementService,
+  CertificationService,
   LinkService
 } from "@/lib/db";
 import { ProfileHeader } from "@/components/profile/profile-header";
 import { SkillSection } from "@/components/profile/skill-section";
 import { ExperienceSection } from "@/components/profile/experience-section";
 import { AchievementSection } from "@/components/profile/achievement-section";
+import { CertificationSection } from "@/components/profile/certification-section";
 import { ResumeSection } from "@/components/profile/resume-section";
 import { ExportProfileButton } from "@/components/profile/export-profile-button";
 import { EditProfileButton } from "@/components/profile/edit-profile-button";
 import { ToastProvider } from "@/components/ui/toast";
 
 interface ProfilePageProps {
-  params: Promise<{
+  params: {
     id: string;
-  }>;
+  };
 }
 
 export async function generateMetadata({ params }: ProfilePageProps): Promise<Metadata> {
-  const { id } = await params;
+  const { id } = params;
   
   let member = await MemberService.getMemberById(id);
   
@@ -53,7 +55,7 @@ export async function generateMetadata({ params }: ProfilePageProps): Promise<Me
 }
 
 export default async function ProfilePage({ params }: ProfilePageProps) {
-  const { id } = await params;
+  const { id } = params;
   const supabase = createServerComponentClient({ cookies });
   const { data: { user } } = await supabase.auth.getUser();
   
@@ -96,6 +98,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   const experiences = await ExperienceService.getMemberExperiences(actualMemberId);
   const achievements = await AchievementService.getMemberAchievements(actualMemberId);
   const links = await LinkService.getMemberLinks(actualMemberId);
+  const certifications = await CertificationService.getMemberCertifications(id);
   
   const isCurrentUser = user?.id === member.id;
   
@@ -151,12 +154,18 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
                 />
               </div>
             )}
-            
             {achievements.length > 0 && (
               <div className="bg-card rounded-lg border shadow-sm">
                 <AchievementSection 
                   achievements={achievements} 
                   isEditable={isCurrentUser}
+                />
+              </div>
+            )}
+            {certifications.length > 0 && (
+              <div className="bg-card rounded-lg border shadow-sm">
+                <CertificationSection 
+                  certifications={certifications}
                 />
               </div>
             )}
@@ -170,14 +179,12 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
                 isEditable={isCurrentUser}
               />
             </div>
-            
-            
-              <div className="bg-card rounded-lg border shadow-sm">
-                <ResumeSection 
-                  resumeUrl={member.resume_url} 
-                  isEditable={isCurrentUser}
-                />
-              </div>
+            <div className="bg-card rounded-lg border shadow-sm">
+              <ResumeSection 
+                resumeUrl={member.resume_url} 
+                isEditable={isCurrentUser}
+              />
+            </div>
           </div>
         </div>
       </div>

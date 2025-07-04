@@ -45,6 +45,11 @@ interface ParsedData {
     end_date: string | null;
     is_current: boolean;
   }[];
+  certifications: {
+    id?: string;
+    name: string;
+    issuing_organization?: string;
+  }[];
   github_url?: string;
   linkedin_url?: string;
   file_path?: string;
@@ -72,6 +77,7 @@ function ConfirmPageContent() {
     experiences: [] as ParsedData['experiences'],
     achievements: [] as string[],
     skills: [] as string[],
+     certifications: [] as ParsedData['certifications'],
     resume_url: "",
   });
 
@@ -90,6 +96,19 @@ function ConfirmPageContent() {
     const githubLink = data.links?.find((l: any) => l.name === 'GitHub')?.url || data.github_url || '';
     const linkedinLink = data.links?.find((l: any) => l.name === 'LinkedIn')?.url || data.linkedin_url || '';
 
+     const certifications = (data.certifications || []).map((cert: any) => {
+      const obj: any = {
+        name: cert.name || '',
+      };
+      if (cert.issuing_organization && cert.issuing_organization.trim() !== '') {
+        obj.issuing_organization = cert.issuing_organization;
+      }
+      if (cert.id && typeof cert.id === 'string' && cert.id.trim() !== '') {
+        obj.id = cert.id;
+      }
+      return obj;
+    });
+
     setParsedData({
       id: memberId,
       name: data.name || '',
@@ -99,6 +118,7 @@ function ConfirmPageContent() {
       year: data.year_of_study || data.year || undefined,
       achievements: achievements,
       experiences: experiences,
+      certifications: certifications,
       github_url: githubLink,
       linkedin_url: linkedinLink,
       file_path: data.resume_url || data.file_path || '',
@@ -114,6 +134,7 @@ function ConfirmPageContent() {
       experiences: experiences,
       achievements: achievements,
       skills: skills,
+      certifications: certifications,
       resume_url: data.resume_url || data.file_path || '',
     });
   };
@@ -190,12 +211,14 @@ function ConfirmPageContent() {
         experiencesRes,
         achievementsRes,
         linksRes,
+        certificationsRes,
       ] = await Promise.all([
         fetch(`/api/member/profile/${memberId}`),
         fetch(`/api/member/skills/${memberId}`),
         fetch(`/api/member/experience/${memberId}`),
         fetch(`/api/member/achievements/${memberId}`),
         fetch(`/api/member/links/${memberId}`),
+        fetch(`/api/member/certifications/${memberId}`),
       ]);
 
       if (!memberRes.ok) throw new Error('Failed to load member data');
@@ -205,6 +228,7 @@ function ConfirmPageContent() {
       const experiencesData = await experiencesRes.ok ? await experiencesRes.json() : [];
       const achievementsData = await achievementsRes.ok ? await achievementsRes.json() : [];
       const linksData = await linksRes.ok ? await linksRes.json() : [];
+ const certificationsData = await certificationsRes.ok ? await certificationsRes.json() : [];
 
       const combinedData = {
         ...memberData,
@@ -212,6 +236,8 @@ function ConfirmPageContent() {
         experiences: experiencesData,
         achievements: achievementsData,
         links: linksData,
+           certifications: certificationsData,
+     
       };
 
       populateFormAndParsedData(combinedData, memberId);
@@ -313,6 +339,32 @@ function ConfirmPageContent() {
     }));
   };
 
+const handleCertificationChange = (index: number, field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      certifications: prev.certifications.map((cert, i) => 
+        i === index ? { ...cert, [field]: value } : cert
+      )
+    }));
+  };
+
+  const addCertification = () => {
+    setFormData(prev => ({
+      ...prev,
+      certifications: [...prev.certifications, {
+        name: '',
+        issuing_organization: ''
+      }]
+    }));
+  };
+
+  const removeCertification = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      certifications: prev.certifications.filter((_, i) => i !== index)
+    }));
+  };
+
   const handlePictureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -364,6 +416,21 @@ const handleSubmit = async (e: React.FormEvent) => {
       pictureUrl = publicUrl;
     }
 
+ const cleanedCertifications = formData.certifications
+        .filter(cert => cert.name.trim())
+        .map(cert => {
+          const { id, name, issuing_organization } = cert;
+          const result: any = { name };
+          if (issuing_organization && issuing_organization.trim() !== '') {
+            result.issuing_organization = issuing_organization;
+          }
+          if (id && typeof id === 'string' && id.trim() !== '') {
+            result.id = id;
+          }
+          return result;
+        });
+
+
     const payload = {
       member: {
         id: memberId,
@@ -380,7 +447,9 @@ const handleSubmit = async (e: React.FormEvent) => {
       ].filter(l => l.url),
       skills: formData.skills.filter(s => s && s.trim()),
       experiences: formData.experiences,
-      achievements: formData.achievements.filter(a => a && a.trim())
+      achievements: formData.achievements.filter(a => a && a.trim()),
+      certifications: cleanedCertifications,
+     
     };
 
     const res = await fetch('/api/profile/update', {
@@ -660,6 +729,63 @@ const handleSubmit = async (e: React.FormEvent) => {
                 </div>
               ))}
             </div>
+
+
+            <Separator />
+
+            {/* Certifications Section */}
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <Label>Certifications</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addCertification}
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Certification
+                </Button>
+              </div>
+              <div className="space-y-4">
+                {formData.certifications.map((cert, index) => (
+                  <div key={index} className="p-4 bg-muted/50 rounded-lg space-y-4">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1 space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label>Certification Name</Label>
+                            <Input
+                              value={cert.name}
+                              onChange={(e) => handleCertificationChange(index, 'name', e.target.value)}
+                              placeholder="Certification name"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Issuing Organization (Optional)</Label>
+                            <Input
+                              value={cert.issuing_organization || ''}
+                              onChange={(e) => handleCertificationChange(index, 'issuing_organization', e.target.value)}
+                              placeholder="Organization name"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeCertification(index)}
+                        className="ml-2"
+                      >
+                        <Trash className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             <Button 
               type="button" 
               variant="outline" 
