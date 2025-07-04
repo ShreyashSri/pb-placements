@@ -362,9 +362,4 @@ export function ConfirmationForm({ parsedData }: ConfirmationFormProps) {
     </form>
   );
 }
-<style jsx global>{`
-  header, footer {
-    box-shadow: none !important;
-    background: transparent !important;
-  }
-`}</style>
+
