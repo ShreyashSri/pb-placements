@@ -19,7 +19,7 @@ export function HeroSection() {
   };
   
   return (
-    <section className="py-20 md:py-28 lg:py-36">
+    <section className="h-[100vh]  flex flex-col justify-center items-center px-4 md:px-6 lg:px-20 relative">
       <div className="px-4 md:px-6">
         <motion.div 
           className="flex flex-col items-center text-center space-y-8"
@@ -41,26 +41,31 @@ export function HeroSection() {
             </p>
           </motion.div>
           
-          <motion.form 
-            className="flex w-full max-w-lg space-x-2"
+          <motion.form
+            className="flex w-full max-w-lg"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.5 }}
             onSubmit={handleSearch}
           >
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search by skill, domain, or name..."
-                className="pl-10 h-12 rounded-full"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+            <div className="relative flex-1 bg-gradient-to-r from-green-400 via-green-500 to-green-600 p-[2px] rounded-full shadow-[0_0_8px_1px_rgba(34,197,94,0.25)]">
+              <div className="flex items-center bg-black rounded-full pl-4 h-12 w-full">
+                <Search className="h-5 w-5 text-green-300 mr-3" />
+                <input
+                  type="search"
+                  placeholder="Search by skill, domain, or name..."
+                  className="flex-1 bg-transparent outline-none text-white placeholder:text-zinc-400"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                <button
+                  type="submit"
+                  className="ml-3 h-12 px-5 rounded-full bg-green-500 hover:bg-green-600 text-white font-semibold transition"
+                >
+                  Search
+                </button>
+              </div>
             </div>
-            <Button type="submit" className="h-12 px-6 rounded-full bg-green-500 hover:bg-green-600">
-              Search
-            </Button>
           </motion.form>
           
           <motion.div

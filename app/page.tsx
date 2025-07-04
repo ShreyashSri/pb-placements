@@ -5,6 +5,7 @@ import { useAuthStore } from "@/lib/authStore";
 import { useRouter, useSearchParams } from "next/navigation";
 import { HeroSection } from "@/components/home/hero-section";
 import { FeaturesSection } from "@/components/home/features-section";
+import { AnimatedGradientBackground } from '@/components/ui/animated-gradient-background';
 
 function AuthHandler() {
   const router = useRouter();
@@ -40,16 +41,21 @@ function AuthHandler() {
 
 function PageContent() {
   return (
-    <div className="py-8 md:py-12">
-      {/* <div className="mb-8 text-center">
-        <h1 className="text-3xl font-bold tracking-tight mb-2">Upload Your Resume</h1>
-        <p className="text-muted-foreground max-w-2xl mx-auto">
-          Upload your resume to create or update your profile. We'll automatically parse your skills and experience.
-        </p>
-      </div> */}
-      
-      <HeroSection />
-      <FeaturesSection />
+    <div className="relative min-h-screen">
+      {/* Animated gradient background with reduced opacity */}
+      <div className="absolute inset-0 z-0" style={{ opacity: 0.9 }}>
+        <AnimatedGradientBackground />
+      </div>
+      {/* Black overlay for readability */}
+      <div className="absolute inset-0 z-10 bg-black/10 pointer-events-none" />
+      <div className="relative z-20">
+        <div>
+          <HeroSection />
+        </div>
+        <div className="py-8 md:py-12">
+          <FeaturesSection />
+        </div>
+      </div>
     </div>
   );
 }
