@@ -26,8 +26,10 @@ import {
   X,
   PlusCircle,
   Loader2,
-  Trash
+  Trash,
+  Plus
 } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 
 interface ParsedData {
   id: string;
@@ -755,64 +757,6 @@ const handleSubmit = async (e: React.FormEvent) => {
                 </div>
               ))}
             </div>
-
-
-            <Separator />
-
-            {/* Certifications Section */}
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <Label>Certifications</Label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={addCertification}
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  Add Certification
-                </Button>
-              </div>
-              <div className="space-y-4">
-                {formData.certifications.map((cert, index) => (
-                  <div key={index} className="p-4 bg-muted/50 rounded-lg space-y-4">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1 space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label>Certification Name</Label>
-                            <Input
-                              value={cert.name}
-                              onChange={(e) => handleCertificationChange(index, 'name', e.target.value)}
-                              placeholder="Certification name"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label>Issuing Organization (Optional)</Label>
-                            <Input
-                              value={cert.issuing_organization || ''}
-                              onChange={(e) => handleCertificationChange(index, 'issuing_organization', e.target.value)}
-                              placeholder="Organization name"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removeCertification(index)}
-                        className="ml-2"
-                      >
-                        <Trash className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-<<<<<<< HEAD
             <Button 
               type="button" 
               variant="outline" 
@@ -823,112 +767,132 @@ const handleSubmit = async (e: React.FormEvent) => {
             </Button>
           </div>
 
+          {/* Certifications */}
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold mb-4">Certifications</h2>
+            <div className="space-y-3">
+              {formData.certifications.map((cert, index) => (
+                <div key={index} className="rounded-lg p-6 border border-white/10 bg-transparent space-y-4 relative">
+                  <button 
+                    type="button"
+                    onClick={() => removeCertification(index)}
+                    className="absolute top-4 right-4 text-zinc-500 hover:text-red-500"
+                  >
+                    <Trash className="w-4 h-4" />
+                  </button>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-sm font-medium text-zinc-400">Certification Name</Label>
+                      <Input 
+                        value={cert.name} 
+                        onChange={(e) => handleCertificationChange(index, "name", e.target.value)} 
+                        className="bg-transparent border-white/10"
+                        placeholder="Certification name"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium text-zinc-400">Issuing Organization (Optional)</Label>
+                      <Input 
+                        value={cert.issuing_organization || ''} 
+                        onChange={(e) => handleCertificationChange(index, "issuing_organization", e.target.value)} 
+                        className="bg-transparent border-white/10"
+                        placeholder="Organization name"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="mt-4 border-white/10 text-white"
+                onClick={addCertification}
+              >
+                + Add Certification
+              </Button>
+            </div>
+          </div>
+
+          {/* Projects */}
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold mb-4">Projects</h2>
+            <div className="space-y-6">
+              {formData.projects.map((proj, index) => (
+                <div key={index} className="rounded-lg p-6 border border-white/10 bg-transparent space-y-4 relative">
+                  <button 
+                    type="button"
+                    onClick={() => setFormData(prev => ({
+                      ...prev,
+                      projects: prev.projects.filter((_, i) => i !== index)
+                    }))}
+                    className="absolute top-4 right-4 text-zinc-500 hover:text-red-500"
+                  >
+                    <Trash className="w-4 h-4" />
+                  </button>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-sm font-medium text-zinc-400">Project Name</Label>
+                      <Input 
+                        value={proj.name} 
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev,
+                          projects: prev.projects.map((p, i) =>
+                            i === index ? { ...p, name: e.target.value } : p
+                          )
+                        }))} 
+                        className="bg-transparent border-white/10"
+                        placeholder="Project name"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium text-zinc-400">Project Link (Optional)</Label>
+                      <Input 
+                        value={proj.link || ''} 
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev,
+                          projects: prev.projects.map((p, i) =>
+                            i === index ? { ...p, link: e.target.value } : p
+                          )
+                        }))} 
+                        className="bg-transparent border-white/10"
+                        placeholder="https://github.com/yourproject"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-zinc-400">Description</Label>
+                    <Textarea 
+                      value={proj.description} 
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev,
+                        projects: prev.projects.map((p, i) =>
+                          i === index ? { ...p, description: e.target.value } : p
+                        )
+                      }))} 
+                      className="bg-transparent border-white/10 min-h-[100px] resize-none"
+                      rows={3}
+                      placeholder="Describe your project"
+                    />
+                  </div>
+                </div>
+              ))}
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="mt-4 border-white/10 text-white"
+                onClick={() => setFormData(prev => ({
+                  ...prev,
+                  projects: [...prev.projects, { name: "", description: "", link: "" }]
+                }))}
+              >
+                + Add Project
+              </Button>
+            </div>
+          </div>
+
           {/* Submit */}
           <div className="mt-10 flex justify-end gap-4">
             <Button 
-=======
-            <Separator />
-
-            {/* Projects Section */}
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <Label>Projects</Label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      projects: [
-                        ...prev.projects,
-                        { name: "", description: "", link: "" }
-                      ]
-                    }))
-                  }
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  Add Project
-                </Button>
-              </div>
-              <div className="space-y-4">
-                {formData.projects.map((proj, index) => (
-                  <div key={index} className="p-4 bg-muted/50 rounded-lg space-y-4">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1 space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label>Project Name</Label>
-                            <Input
-                              value={proj.name}
-                              onChange={(e) =>
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  projects: prev.projects.map((p, i) =>
-                                    i === index ? { ...p, name: e.target.value } : p
-                                  )
-                                }))
-                              }
-                              placeholder="Project name"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label>Project Link (Optional)</Label>
-                            <Input
-                              value={proj.link || ""}
-                              onChange={(e) =>
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  projects: prev.projects.map((p, i) =>
-                                    i === index ? { ...p, link: e.target.value } : p
-                                  )
-                                }))
-                              }
-                              placeholder="https://github.com/yourproject"
-                            />
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Description</Label>
-                          <Textarea
-                            value={proj.description}
-                            onChange={(e) =>
-                              setFormData((prev) => ({
-                                ...prev,
-                                projects: prev.projects.map((p, i) =>
-                                  i === index ? { ...p, description: e.target.value } : p
-                                )
-                              }))
-                            }
-                            placeholder="Describe your project"
-                            rows={3}
-                          />
-                        </div>
-                      </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            projects: prev.projects.filter((_, i) => i !== index)
-                          }))
-                        }
-                        className="ml-2"
-                      >
-                        <Trash className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-          </CardContent>
-          <CardFooter className="flex justify-between">
-            <Button
->>>>>>> 7eb8505 (added certification and projects section)
               type="button"
               variant="outline" 
               onClick={() => router.push("/upload")}
