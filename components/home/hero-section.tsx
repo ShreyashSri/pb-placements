@@ -19,7 +19,7 @@ export function HeroSection() {
   };
   
   return (
-    <section className="py-20 md:py-28 lg:py-20 lg:px-20 relative">
+    <section className="h-[100vh]  flex flex-col justify-center items-center px-4 md:px-6 lg:px-20 relative">
       <div className="px-4 md:px-6">
         <motion.div 
           className="flex flex-col items-center text-center space-y-8"

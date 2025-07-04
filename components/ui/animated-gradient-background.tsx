@@ -10,27 +10,27 @@ export function AnimatedGradientBackground() {
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    // Each blob has a unique path (start, mid, end positions), more balanced left/right
+    const isMobile = window.innerWidth <= 640;
     const keyframes = [
       [ // Blob 1 (left)
-        { left: "8%", top: "18%" },
+        { left: "0%", top: "18%" },
         { left: "18%", top: "40%" },
-        { left: "10%", top: "78%" }, // Lower left
+        { left: "10%", top: isMobile ? "80%" : "50%" },
       ],
       [ // Blob 2 (center-left)
         { left: "32%", top: "22%" },
         { left: "22%", top: "55%" },
-        { left: "28%", top: "85%" }, // Lower left-center
+        { left: "28%", top: isMobile ? "80%" : "55%" },
       ],
-      [ // Blob 3 (center-right, yellow, less prominent)
+      [ // Blob 3 (center-right, less prominent)
         { left: "60%", top: "25%" },
         { left: "70%", top: "50%" },
-        { left: "45%", top: "80%" }, // Move yellow more to center, not right
+        { left: "45%", top: isMobile ? "65%" : "50%" },
       ],
       [ // Blob 4 (right)
         { left: "78%", top: "20%" },
         { left: "60%", top: "60%" },
-        { left: "82%", top: "78%" },
+        { left: "82%", top: isMobile ? "65%" : "50%" },
       ],
     ];
 

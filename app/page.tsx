@@ -49,7 +49,7 @@ function PageContent() {
       {/* Black overlay for readability */}
       <div className="absolute inset-0 z-10 bg-black/10 pointer-events-none" />
       <div className="relative z-20">
-        <div className="py-8 md:py-12">
+        <div>
           <HeroSection />
         </div>
         <div className="py-8 md:py-12">
