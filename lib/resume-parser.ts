@@ -29,6 +29,11 @@ interface ParsedResumeData {
     name: string;
     issuing_organization?: string;
   }[];
+  projects: {
+    name: string;
+    description: string;
+    link?: string;
+  }[];
   github_url?: string;
   linkedin_url?: string;
   resume_url?: string;
@@ -68,8 +73,9 @@ export async function analyzeWithGemini(text: string): Promise<ParsedResumeData>
     6. A list of notable achievements, take it from the achievements section of resume [Dont put any dates for achievements]
     7. Work experiences take it from the experience section of the resume (including company name, role, description, start date, end date, and if it's current)
     8. Certifications take it from the certifications section of the resume (including certification name, issuing organization)
-    9. GitHub URL if present
-    10. LinkedIn URL if present must be like [https://linkedin.com/in/username]
+    9. Projects: take it from the projects section of the resume (including project name, description, and link if present)
+    10. GitHub URL if present
+    11. LinkedIn URL if present must be like [https://linkedin.com/in/username]
 
     Resume text:
     ${text}
@@ -95,8 +101,15 @@ export async function analyzeWithGemini(text: string): Promise<ParsedResumeData>
       "certifications": [
         {
           "name": "certification name",
-          "issuing_organization": "issuing organization",
-          }
+          "issuing_organization": "issuing organization"
+        }
+      ],
+      "projects": [
+        {
+          "name": "project name",
+          "description": "project description",
+          "link": "project link or null"
+        }
       ],
       "github_url": "github profile url or null",
       "linkedin_url": "linkedin profile url or null"
@@ -132,6 +145,7 @@ export async function analyzeWithGemini(text: string): Promise<ParsedResumeData>
       achievements: parsed.achievements || [],
       experiences: parsed.experiences || [],
       certifications: parsed.certifications || [],
+      projects: parsed.projects || [],
       github_url: parsed.github_url,
       linkedin_url: parsed.linkedin_url
     };
@@ -146,6 +160,7 @@ export async function analyzeWithGemini(text: string): Promise<ParsedResumeData>
       achievements: [],
       experiences: [],
       certifications: [],
+      projects: [],
       github_url: undefined,
       linkedin_url: undefined
     };

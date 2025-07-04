@@ -7,6 +7,7 @@ import {
   AchievementService,
   LinkService,
   CertificationService,
+  ProjectService,
 } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 
@@ -41,6 +42,7 @@ export async function POST(req: NextRequest) {
       achievements = [],
       links = [],
       certifications = [],
+      projects = [],
       resume_url,
       isUpdate = false
     } = await req.json();
@@ -115,6 +117,25 @@ export async function POST(req: NextRequest) {
       await CertificationService.createCertifications(certsToInsert);
     }
 
+    // 7. Clear and re-insert projects (like certifications)
+    await ProjectService.removeProjectsByMemberId(member.id);
+    if (projects && projects.length > 0) {
+      const projectsToInsert = (projects as any[])
+        .filter((proj: any) => proj.name && proj.name.trim())
+        .map((proj: any) => {
+          const obj: any = {
+            name: proj.name,
+            description: proj.description,
+            link: proj.link,
+            member_id: member.id,
+          };
+          // Do NOT include id for any row (let DB generate it)
+          return obj;
+        });
+      await Promise.all(
+        projectsToInsert.map((proj: any) => ProjectService.createProject(proj))
+      );
+    }
 
     const userFolder = `resumes/${user.id}`;
     const { data: resumeFiles } = await supabase.storage

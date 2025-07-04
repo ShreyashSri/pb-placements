@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { CertificationService } from '@/lib/db';
 
-export async function GET(req: NextRequest, context: { params: { memberId: string } }) {
+export async function GET(req: NextRequest, context: any) {
   try {
     const certifications = await CertificationService.getMemberCertifications(context.params.memberId);
     return NextResponse.json(certifications);
@@ -10,7 +10,7 @@ export async function GET(req: NextRequest, context: { params: { memberId: strin
   }
 }
 
-export async function POST(req: NextRequest, context: { params: { memberId: string } }) {
+export async function POST(req: NextRequest, context: any) {
   try {
     const body = await req.json();
     // Accepts either a single certification or an array
@@ -28,7 +28,7 @@ export async function POST(req: NextRequest, context: { params: { memberId: stri
   }
 }
 
-export async function DELETE(req: NextRequest, context: { params: { memberId: string } }) {
+export async function DELETE(req: NextRequest, context: any) {
   try {
     await CertificationService.removeCertificationsByMemberId(context.params.memberId);
     return NextResponse.json({ success: true });

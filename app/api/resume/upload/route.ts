@@ -81,7 +81,6 @@ export async function POST(request: NextRequest) {
     const parsedData = await analyzeWithGemini(extractedText);
 
     parsedData.resume_url = publicResumeUrl;
-    parsedData.resume_filename = `${username}_${timestamp}.pdf`;
 
     return NextResponse.json({
       success: true,

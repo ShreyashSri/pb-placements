@@ -9,13 +9,14 @@ import {
   SkillService,
   MemberService,
   CertificationService,
+  ProjectService,
 } from '@/lib/db';
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { type: string; id: string } }
+  context: any
 ) {
-  const { type, id } = params;
+  const { type, id } = context.params;
 
   try {
     switch (type) {
@@ -29,6 +30,8 @@ export async function GET(
         return NextResponse.json(await SkillService.getMemberSkills(id));
       case 'certifications':
         return NextResponse.json(await CertificationService.getMemberCertifications(id));
+      case 'projects':
+        return NextResponse.json(await ProjectService.getMemberProjects(id));
       case 'profile': {
         const member = await MemberService.getMemberById(id);
         if (!member) {
@@ -47,11 +50,11 @@ export async function GET(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { type: string; id: string } }
+  context: any
 ) {
-  const { type, id } = params;
+  const { type, id } = context.params;
 
-  if (type !== 'achievements') {
+  if (type !== 'achievements' && type !== 'projects') {
     return NextResponse.json({ error: 'DELETE not supported for this type' }, { status: 405 });
   }
 
@@ -63,10 +66,17 @@ export async function DELETE(
   }
 
   try {
-    await AchievementService.deleteAchievement(id);
-    return NextResponse.json({ message: 'Achievement deleted successfully' });
+    if (type === 'achievements') {
+      await AchievementService.deleteAchievement(id);
+      return NextResponse.json({ message: 'Achievement deleted successfully' });
+    }
+    if (type === 'projects') {
+      await ProjectService.removeProject(id);
+      return NextResponse.json({ message: 'Project deleted successfully' });
+    }
   } catch (error) {
-    console.error('Error deleting achievement:', error);
-    return NextResponse.json({ error: 'Failed to delete achievement' }, { status: 500 });
+    console.error(`Error deleting ${type}:`, error);
+    return NextResponse.json({ error: `Failed to delete ${type}` }, { status: 500 });
   }
 }
+

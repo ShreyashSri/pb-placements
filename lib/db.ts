@@ -61,6 +61,14 @@ export interface Certification {
   issuing_organization?: string;
 }
 
+export interface Project {
+  id: string;
+  member_id: string;
+  name: string;
+  description: string;
+  link: string;
+}
+
 // Initialize database tables if they don't exist
 export async function initializeDatabase() {
   try {
@@ -133,9 +141,15 @@ export const MemberService = {
       .select('*')
       .eq('member_id', id);
 
-      // Fetch certifications
+    // Fetch certifications
     const { data: certifications } = await supabase
       .from('certifications')
+      .select('*')
+      .eq('member_id', id);
+
+    // Fetch projects
+    const { data: projects } = await supabase
+      .from('projects')
       .select('*')
       .eq('member_id', id);
 
@@ -146,6 +160,7 @@ export const MemberService = {
       experiences: experiences || [],
       links: links || [],
       certifications: certifications || [],
+      projects: projects || [],
       resume_url: member.resume_url || null,
     }
   },
@@ -478,6 +493,55 @@ export const LinkService = {
   async removeLinksByMemberId(memberId: string) {
     const { error } = await supabase
       .from('links')
+      .delete()
+      .eq('member_id', memberId);
+    if (error) throw error;
+  }
+};
+
+// Project database operations
+export const ProjectService = {
+  async getMemberProjects(memberId: string) {
+    const { data, error } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('member_id', memberId);
+    if (error) throw error;
+    return data || [];
+  },
+
+  async createProject(project: Omit<Project, 'id'>) {
+    const { data, error } = await supabase
+      .from('projects')
+      .insert([project])
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  async updateProject(id: string, project: Partial<Project>) {
+    const { data, error } = await supabase
+      .from('projects')
+      .update(project)
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  async removeProject(id: string) {
+    const { error } = await supabase
+      .from('projects')
+      .delete()
+      .eq('id', id);
+    if (error) throw error;
+  },
+
+  async removeProjectsByMemberId(memberId: string) {
+    const { error } = await supabase
+      .from('projects')
       .delete()
       .eq('member_id', memberId);
     if (error) throw error;

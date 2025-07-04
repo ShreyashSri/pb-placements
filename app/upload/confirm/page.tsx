@@ -50,6 +50,12 @@ interface ParsedData {
     name: string;
     issuing_organization?: string;
   }[];
+  projects: {
+    id?: string;
+    name: string;
+    description: string;
+    link?: string;
+  }[];
   github_url?: string;
   linkedin_url?: string;
   file_path?: string;
@@ -77,7 +83,8 @@ function ConfirmPageContent() {
     experiences: [] as ParsedData['experiences'],
     achievements: [] as string[],
     skills: [] as string[],
-     certifications: [] as ParsedData['certifications'],
+    certifications: [] as ParsedData['certifications'],
+    projects: [] as ParsedData['projects'],
     resume_url: "",
   });
 
@@ -109,6 +116,13 @@ function ConfirmPageContent() {
       return obj;
     });
 
+    const projects = (data.projects || []).map((proj: any) => ({
+      id: proj.id || '',
+      name: proj.name || '',
+      description: proj.description || '',
+      link: proj.link || ''
+    }));
+
     setParsedData({
       id: memberId,
       name: data.name || '',
@@ -119,6 +133,7 @@ function ConfirmPageContent() {
       achievements: achievements,
       experiences: experiences,
       certifications: certifications,
+      projects: projects,
       github_url: githubLink,
       linkedin_url: linkedinLink,
       file_path: data.resume_url || data.file_path || '',
@@ -135,6 +150,7 @@ function ConfirmPageContent() {
       achievements: achievements,
       skills: skills,
       certifications: certifications,
+      projects: projects,
       resume_url: data.resume_url || data.file_path || '',
     });
   };
@@ -430,6 +446,16 @@ const handleSubmit = async (e: React.FormEvent) => {
           return result;
         });
 
+    const cleanedProjects = formData.projects
+      .filter(proj => proj.name && proj.name.trim())
+      .map(proj => {
+        const { id, name, description, link } = proj;
+        const result: any = { name, description, link };
+        if (id && typeof id === 'string' && id.trim() !== '') {
+          result.id = id;
+        }
+        return result;
+      });
 
     const payload = {
       member: {
@@ -449,7 +475,7 @@ const handleSubmit = async (e: React.FormEvent) => {
       experiences: formData.experiences,
       achievements: formData.achievements.filter(a => a && a.trim()),
       certifications: cleanedCertifications,
-     
+      projects: cleanedProjects,
     };
 
     const res = await fetch('/api/profile/update', {
@@ -786,6 +812,7 @@ const handleSubmit = async (e: React.FormEvent) => {
               </div>
             </div>
 
+<<<<<<< HEAD
             <Button 
               type="button" 
               variant="outline" 
@@ -799,6 +826,109 @@ const handleSubmit = async (e: React.FormEvent) => {
           {/* Submit */}
           <div className="mt-10 flex justify-end gap-4">
             <Button 
+=======
+            <Separator />
+
+            {/* Projects Section */}
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <Label>Projects</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      projects: [
+                        ...prev.projects,
+                        { name: "", description: "", link: "" }
+                      ]
+                    }))
+                  }
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Project
+                </Button>
+              </div>
+              <div className="space-y-4">
+                {formData.projects.map((proj, index) => (
+                  <div key={index} className="p-4 bg-muted/50 rounded-lg space-y-4">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1 space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label>Project Name</Label>
+                            <Input
+                              value={proj.name}
+                              onChange={(e) =>
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  projects: prev.projects.map((p, i) =>
+                                    i === index ? { ...p, name: e.target.value } : p
+                                  )
+                                }))
+                              }
+                              placeholder="Project name"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Project Link (Optional)</Label>
+                            <Input
+                              value={proj.link || ""}
+                              onChange={(e) =>
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  projects: prev.projects.map((p, i) =>
+                                    i === index ? { ...p, link: e.target.value } : p
+                                  )
+                                }))
+                              }
+                              placeholder="https://github.com/yourproject"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Description</Label>
+                          <Textarea
+                            value={proj.description}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                projects: prev.projects.map((p, i) =>
+                                  i === index ? { ...p, description: e.target.value } : p
+                                )
+                              }))
+                            }
+                            placeholder="Describe your project"
+                            rows={3}
+                          />
+                        </div>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            projects: prev.projects.filter((_, i) => i !== index)
+                          }))
+                        }
+                        className="ml-2"
+                      >
+                        <Trash className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+          </CardContent>
+          <CardFooter className="flex justify-between">
+            <Button
+>>>>>>> 7eb8505 (added certification and projects section)
               type="button"
               variant="outline" 
               onClick={() => router.push("/upload")}

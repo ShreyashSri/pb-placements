@@ -8,7 +8,8 @@ import {
   ExperienceService, 
   AchievementService,
   CertificationService,
-  LinkService
+  LinkService,
+  ProjectService
 } from "@/lib/db";
 import { ProfileHeader } from "@/components/profile/profile-header";
 import { SkillSection } from "@/components/profile/skill-section";
@@ -19,15 +20,16 @@ import { ResumeSection } from "@/components/profile/resume-section";
 import { ExportProfileButton } from "@/components/profile/export-profile-button";
 import { EditProfileButton } from "@/components/profile/edit-profile-button";
 import { ToastProvider } from "@/components/ui/toast";
+import { ProjectSection } from '@/components/profile/project-section';
 
 interface ProfilePageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export async function generateMetadata({ params }: ProfilePageProps): Promise<Metadata> {
-  const { id } = params;
+  const { id } = await params;
   
   let member = await MemberService.getMemberById(id);
   
@@ -55,7 +57,7 @@ export async function generateMetadata({ params }: ProfilePageProps): Promise<Me
 }
 
 export default async function ProfilePage({ params }: ProfilePageProps) {
-  const { id } = params;
+  const { id } = await params;
   const supabase = createServerComponentClient({ cookies });
   const { data: { user } } = await supabase.auth.getUser();
   
@@ -99,6 +101,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   const achievements = await AchievementService.getMemberAchievements(actualMemberId);
   const links = await LinkService.getMemberLinks(actualMemberId);
   const certifications = await CertificationService.getMemberCertifications(id);
+  const projects = await ProjectService.getMemberProjects(id);
   
   const isCurrentUser = user?.id === member.id;
   
@@ -168,6 +171,12 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
                   certifications={certifications}
                 />
               </div>
+            )}
+            {projects.length > 0 && (
+              <ProjectSection 
+                projects={projects}
+                isEditable={isCurrentUser}
+              />
             )}
           </div>
           
