@@ -14,8 +14,9 @@ export default function UploadPage() {
           Upload your resume to create or update your profile. We&apos;ll automatically parse your skills and experience.
         </p>
       </div>
-      
+      <div className="flex justify-center">
       <ResumeUpload />
+    </div>
     </div>
   );
 }
