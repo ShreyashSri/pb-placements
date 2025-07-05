@@ -297,7 +297,6 @@ function ConfirmPageContent() {
     setFormData(prev => ({
       ...prev,
       experiences: [
-        ...prev.experiences,
         {
           company: '',
           role: '',
@@ -305,7 +304,8 @@ function ConfirmPageContent() {
           start_date: new Date().toISOString().split('T')[0],
           end_date: null,
           is_current: false
-        }
+        },
+        ...prev.experiences
       ]
     }));
   };
@@ -320,7 +320,7 @@ function ConfirmPageContent() {
   const addAchievement = () => {
     setFormData(prev => ({
       ...prev,
-      achievements: [...prev.achievements, '']
+      achievements: ['', ...prev.achievements]
     }));
   };
 
@@ -335,7 +335,7 @@ function ConfirmPageContent() {
     if (newSkill.trim()) {
       setFormData(prev => ({
         ...prev,
-        skills: [...prev.skills, newSkill.trim()]
+        skills: [newSkill.trim(), ...prev.skills]
       }));
       setNewSkill("");
     }
@@ -369,10 +369,10 @@ const handleCertificationChange = (index: number, field: string, value: string) 
   const addCertification = () => {
     setFormData(prev => ({
       ...prev,
-      certifications: [...prev.certifications, {
+      certifications: [{
         name: '',
         issuing_organization: ''
-      }]
+      }, ...prev.certifications]
     }));
   };
 
@@ -585,7 +585,11 @@ const handleSubmit = async (e: React.FormEvent) => {
                   <SelectValue placeholder="Select year" />
                 </SelectTrigger>
                 <SelectContent>
-                  {["1", "2", "3", "4"].map((y) => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+                  {["1", "2", "3", "4", "alumni"].map((y) => (
+                    <SelectItem key={y} value={y}>
+                      {y === "alumni" ? "Alumni" : `${y}${y === "1" ? "st" : y === "2" ? "nd" : y === "3" ? "rd" : "th"} Year`}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -882,7 +886,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                 className="mt-4 border-white/10 text-white"
                 onClick={() => setFormData(prev => ({
                   ...prev,
-                  projects: [...prev.projects, { name: "", description: "", link: "" }]
+                  projects: [{ name: "", description: "", link: "" }, ...prev.projects]
                 }))}
               >
                 + Add Project

@@ -109,8 +109,6 @@ export const MemberService = {
       .eq('id', id)
       .single();
     
-    console.log('Fetched member data:', member); // Debug log
-    
     if (memberError || !member) return null;
 
     // Fetch skills
@@ -240,15 +238,11 @@ export const MemberService = {
   },
 
   async createMember(member: Omit<Member, 'id' | 'created_at' | 'updated_at'>) {
-    console.log('Creating member with data:', member); // Debug log
-    
     const { data, error } = await supabase
       .from('members')
       .insert([member])
       .select()
       .single();
-    
-    console.log('Member creation result:', { data, error }); // Debug log
     
     if (error) throw error;
     return data;
@@ -267,15 +261,11 @@ export const MemberService = {
   },
 
   async upsertMember(member: Member) {
-    console.log('Upserting member with data:', member); // Debug log
-    
     const { data, error } = await supabase
       .from('members')
       .upsert([member])
       .select()
       .single();
-    
-    console.log('Member upsert result:', { data, error }); // Debug log
     
     if (error) throw error;
     return data;
@@ -294,7 +284,7 @@ export const CertificationService = {
     return data || [];
   },
 
-  async createCertification(certification: Omit<Certification, 'id' | 'created_at'>) {
+  async createCertification(certification: Omit<Certification, 'id'>) {
     const { data, error } = await supabase
       .from('certifications')
       .insert(certification)
@@ -305,7 +295,7 @@ export const CertificationService = {
     return data;
   },
 
-  async createCertifications(certifications: Omit<Certification, 'id' | 'created_at'>[]) {
+  async createCertifications(certifications: Omit<Certification, 'id'>[]) {
     const { data, error } = await supabase
       .from('certifications')
       .insert(certifications)
@@ -412,7 +402,7 @@ export const AchievementService = {
     return data;
   },
   
-  async createAchievement(achievement: Omit<Achievement, 'id' | 'created_at'>) {
+  async createAchievement(achievement: Omit<Achievement, 'id'>) {
     const { data, error } = await supabase
       .from('achievements')
       .insert([achievement])
@@ -422,6 +412,15 @@ export const AchievementService = {
     return data;
   },
   
+  async createAchievements(achievements: Omit<Achievement, 'id'>[]) {
+    const { data, error } = await supabase
+      .from('achievements')
+      .insert(achievements)
+      .select();
+    if (error) throw error;
+    return data;
+  },
+
   async deleteAchievement(achievementId: string) {
     const { error } = await supabase
       .from('achievements')
@@ -450,12 +449,21 @@ export const ExperienceService = {
     return data;
   },
   
-  async createExperience(experience: Omit<Experience, 'id' | 'created_at'>) {
+  async createExperience(experience: Omit<Experience, 'id'>) {
     const { data, error } = await supabase
       .from('experiences')
       .insert([experience])
       .select()
       .single();
+    if (error) throw error;
+    return data;
+  },
+
+  async createExperiences(experiences: Omit<Experience, 'id'>[]) {
+    const { data, error } = await supabase
+      .from('experiences')
+      .insert(experiences)
+      .select();
     if (error) throw error;
     return data;
   },
@@ -480,12 +488,21 @@ export const LinkService = {
     return data;
   },
   
-  async createLink(link: Omit<Link, 'id' | 'created_at'>) {
+  async createLink(link: Omit<Link, 'id'>) {
     const { data, error } = await supabase
       .from('links')
       .insert([link])
       .select()
       .single();
+    if (error) throw error;
+    return data;
+  },
+
+  async createLinks(links: Omit<Link, 'id'>[]) {
+    const { data, error } = await supabase
+      .from('links')
+      .insert(links)
+      .select();
     if (error) throw error;
     return data;
   },
@@ -516,6 +533,15 @@ export const ProjectService = {
       .insert([project])
       .select()
       .single();
+    if (error) throw error;
+    return data;
+  },
+
+  async createProjects(projects: Omit<Project, 'id'>[]) {
+    const { data, error } = await supabase
+      .from('projects')
+      .insert(projects)
+      .select();
     if (error) throw error;
     return data;
   },

@@ -69,34 +69,31 @@ export async function POST(req: NextRequest) {
 
     await ExperienceService.removeExperiencesByMemberId(user.id);
     if (experiences && experiences.length > 0) {
-      await Promise.all(
-        experiences.map((exp: any) =>
-          ExperienceService.createExperience({ ...exp, member_id: user.id })
-        )
-      );
+      const experiencesToInsert = experiences.map((exp: any) => ({
+        ...exp,
+        member_id: user.id
+      }));
+      await ExperienceService.createExperiences(experiencesToInsert);
     }
 
     await AchievementService.removeAchievementsByMemberId(user.id);
     if (achievements && achievements.length > 0) {
-      await Promise.all(
-        achievements.map((desc: string) =>
-          AchievementService.createAchievement({
-            member_id: user.id,
-            description: desc,
-            title: 'Achievement',
-            date: new Date(),
-          })
-        )
-      );
+      const achievementsToInsert = achievements.map((desc: string) => ({
+        member_id: user.id,
+        description: desc,
+        title: 'Achievement',
+        date: new Date(),
+      }));
+      await AchievementService.createAchievements(achievementsToInsert);
     }
 
     await LinkService.removeLinksByMemberId(user.id);
     if (links && links.length > 0) {
-      await Promise.all(
-        links.map((link: any) =>
-          LinkService.createLink({ ...link, member_id: user.id })
-        )
-      );
+      const linksToInsert = links.map((link: any) => ({
+        ...link,
+        member_id: user.id
+      }));
+      await LinkService.createLinks(linksToInsert);
     }
      // 6. Clear and re-insert certifications (like achievements)
     await CertificationService.removeCertificationsByMemberId(member.id);
@@ -111,7 +108,6 @@ export async function POST(req: NextRequest) {
           if (cert.issuing_organization && cert.issuing_organization.trim() !== '') {
             obj.issuing_organization = cert.issuing_organization;
           }
-          // Do NOT include id for any row (let DB generate it)
           return obj;
         });
       await CertificationService.createCertifications(certsToInsert);
@@ -129,12 +125,9 @@ export async function POST(req: NextRequest) {
             link: proj.link,
             member_id: member.id,
           };
-          // Do NOT include id for any row (let DB generate it)
           return obj;
         });
-      await Promise.all(
-        projectsToInsert.map((proj: any) => ProjectService.createProject(proj))
-      );
+      await ProjectService.createProjects(projectsToInsert);
     }
 
     const userFolder = `resumes/${user.id}`;

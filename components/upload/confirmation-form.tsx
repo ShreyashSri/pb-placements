@@ -131,7 +131,7 @@ export function ConfirmationForm({ parsedData }: ConfirmationFormProps) {
     if (newSkill.trim() === "" || formData.skills.includes(newSkill)) return;
     setFormData((prev: any) => ({
       ...prev,
-      skills: [...prev.skills, newSkill],
+      skills: [newSkill, ...prev.skills],
     }));
     setNewSkill("");
   };
@@ -147,7 +147,7 @@ export function ConfirmationForm({ parsedData }: ConfirmationFormProps) {
     if (newAchievement.trim() === "") return;
     setFormData((prev: any) => ({
       ...prev,
-      achievements: [...prev.achievements, newAchievement],
+      achievements: [newAchievement, ...prev.achievements],
     }));
     setNewAchievement("");
   };
@@ -172,7 +172,7 @@ export function ConfirmationForm({ parsedData }: ConfirmationFormProps) {
     if (!newProject.name.trim()) return;
     setFormData((prev: any) => ({
       ...prev,
-      projects: [...prev.projects, { ...newProject }],
+      projects: [{ ...newProject }, ...prev.projects],
     }));
     setNewProject({ name: '', description: '', link: '' });
   };
@@ -318,7 +318,7 @@ export function ConfirmationForm({ parsedData }: ConfirmationFormProps) {
                   <SelectItem value="2">2nd Year</SelectItem>
                   <SelectItem value="3">3rd Year</SelectItem>
                   <SelectItem value="4">4th Year</SelectItem>
-                  <SelectItem value="5">5th Year</SelectItem>
+                  <SelectItem value="alumni">Alumni</SelectItem>
                 </SelectContent>
               </Select>
             </div>
