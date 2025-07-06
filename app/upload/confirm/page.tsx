@@ -26,8 +26,10 @@ import {
   X,
   PlusCircle,
   Loader2,
-  Trash
+  Trash,
+  Plus
 } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 
 interface ParsedData {
   id: string;
@@ -44,6 +46,17 @@ interface ParsedData {
     start_date: string;
     end_date: string | null;
     is_current: boolean;
+  }[];
+  certifications: {
+    id?: string;
+    name: string;
+    issuing_organization?: string;
+  }[];
+  projects: {
+    id?: string;
+    name: string;
+    description: string;
+    link?: string;
   }[];
   github_url?: string;
   linkedin_url?: string;
@@ -72,6 +85,8 @@ function ConfirmPageContent() {
     experiences: [] as ParsedData['experiences'],
     achievements: [] as string[],
     skills: [] as string[],
+    certifications: [] as ParsedData['certifications'],
+    projects: [] as ParsedData['projects'],
     resume_url: "",
   });
 
@@ -90,6 +105,26 @@ function ConfirmPageContent() {
     const githubLink = data.links?.find((l: any) => l.name === 'GitHub')?.url || data.github_url || '';
     const linkedinLink = data.links?.find((l: any) => l.name === 'LinkedIn')?.url || data.linkedin_url || '';
 
+     const certifications = (data.certifications || []).map((cert: any) => {
+      const obj: any = {
+        name: cert.name || '',
+      };
+      if (cert.issuing_organization && cert.issuing_organization.trim() !== '') {
+        obj.issuing_organization = cert.issuing_organization;
+      }
+      if (cert.id && typeof cert.id === 'string' && cert.id.trim() !== '') {
+        obj.id = cert.id;
+      }
+      return obj;
+    });
+
+    const projects = (data.projects || []).map((proj: any) => ({
+      id: proj.id || '',
+      name: proj.name || '',
+      description: proj.description || '',
+      link: proj.link || ''
+    }));
+
     setParsedData({
       id: memberId,
       name: data.name || '',
@@ -99,6 +134,8 @@ function ConfirmPageContent() {
       year: data.year_of_study || data.year || undefined,
       achievements: achievements,
       experiences: experiences,
+      certifications: certifications,
+      projects: projects,
       github_url: githubLink,
       linkedin_url: linkedinLink,
       file_path: data.resume_url || data.file_path || '',
@@ -114,6 +151,8 @@ function ConfirmPageContent() {
       experiences: experiences,
       achievements: achievements,
       skills: skills,
+      certifications: certifications,
+      projects: projects,
       resume_url: data.resume_url || data.file_path || '',
     });
   };
@@ -190,12 +229,14 @@ function ConfirmPageContent() {
         experiencesRes,
         achievementsRes,
         linksRes,
+        certificationsRes,
       ] = await Promise.all([
         fetch(`/api/member/profile/${memberId}`),
         fetch(`/api/member/skills/${memberId}`),
         fetch(`/api/member/experience/${memberId}`),
         fetch(`/api/member/achievements/${memberId}`),
         fetch(`/api/member/links/${memberId}`),
+        fetch(`/api/member/certifications/${memberId}`),
       ]);
 
       if (!memberRes.ok) throw new Error('Failed to load member data');
@@ -205,6 +246,7 @@ function ConfirmPageContent() {
       const experiencesData = await experiencesRes.ok ? await experiencesRes.json() : [];
       const achievementsData = await achievementsRes.ok ? await achievementsRes.json() : [];
       const linksData = await linksRes.ok ? await linksRes.json() : [];
+ const certificationsData = await certificationsRes.ok ? await certificationsRes.json() : [];
 
       const combinedData = {
         ...memberData,
@@ -212,6 +254,8 @@ function ConfirmPageContent() {
         experiences: experiencesData,
         achievements: achievementsData,
         links: linksData,
+           certifications: certificationsData,
+     
       };
 
       populateFormAndParsedData(combinedData, memberId);
@@ -253,7 +297,6 @@ function ConfirmPageContent() {
     setFormData(prev => ({
       ...prev,
       experiences: [
-        ...prev.experiences,
         {
           company: '',
           role: '',
@@ -261,7 +304,8 @@ function ConfirmPageContent() {
           start_date: new Date().toISOString().split('T')[0],
           end_date: null,
           is_current: false
-        }
+        },
+        ...prev.experiences
       ]
     }));
   };
@@ -276,7 +320,7 @@ function ConfirmPageContent() {
   const addAchievement = () => {
     setFormData(prev => ({
       ...prev,
-      achievements: [...prev.achievements, '']
+      achievements: ['', ...prev.achievements]
     }));
   };
 
@@ -291,7 +335,7 @@ function ConfirmPageContent() {
     if (newSkill.trim()) {
       setFormData(prev => ({
         ...prev,
-        skills: [...prev.skills, newSkill.trim()]
+        skills: [newSkill.trim(), ...prev.skills]
       }));
       setNewSkill("");
     }
@@ -310,6 +354,32 @@ function ConfirmPageContent() {
       skills: prev.skills.map((skill, i) =>
         i === index ? value : skill
       )
+    }));
+  };
+
+const handleCertificationChange = (index: number, field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      certifications: prev.certifications.map((cert, i) => 
+        i === index ? { ...cert, [field]: value } : cert
+      )
+    }));
+  };
+
+  const addCertification = () => {
+    setFormData(prev => ({
+      ...prev,
+      certifications: [{
+        name: '',
+        issuing_organization: ''
+      }, ...prev.certifications]
+    }));
+  };
+
+  const removeCertification = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      certifications: prev.certifications.filter((_, i) => i !== index)
     }));
   };
 
@@ -364,6 +434,31 @@ const handleSubmit = async (e: React.FormEvent) => {
       pictureUrl = publicUrl;
     }
 
+ const cleanedCertifications = formData.certifications
+        .filter(cert => cert.name.trim())
+        .map(cert => {
+          const { id, name, issuing_organization } = cert;
+          const result: any = { name };
+          if (issuing_organization && issuing_organization.trim() !== '') {
+            result.issuing_organization = issuing_organization;
+          }
+          if (id && typeof id === 'string' && id.trim() !== '') {
+            result.id = id;
+          }
+          return result;
+        });
+
+    const cleanedProjects = formData.projects
+      .filter(proj => proj.name && proj.name.trim())
+      .map(proj => {
+        const { id, name, description, link } = proj;
+        const result: any = { name, description, link };
+        if (id && typeof id === 'string' && id.trim() !== '') {
+          result.id = id;
+        }
+        return result;
+      });
+
     const payload = {
       member: {
         id: memberId,
@@ -380,7 +475,9 @@ const handleSubmit = async (e: React.FormEvent) => {
       ].filter(l => l.url),
       skills: formData.skills.filter(s => s && s.trim()),
       experiences: formData.experiences,
-      achievements: formData.achievements.filter(a => a && a.trim())
+      achievements: formData.achievements.filter(a => a && a.trim()),
+      certifications: cleanedCertifications,
+      projects: cleanedProjects,
     };
 
     const res = await fetch('/api/profile/update', {
@@ -488,7 +585,11 @@ const handleSubmit = async (e: React.FormEvent) => {
                   <SelectValue placeholder="Select year" />
                 </SelectTrigger>
                 <SelectContent>
-                  {["1", "2", "3", "4"].map((y) => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+                  {["1", "2", "3", "4", "alumni"].map((y) => (
+                    <SelectItem key={y} value={y}>
+                      {y === "alumni" ? "Alumni" : `${y}${y === "1" ? "st" : y === "2" ? "nd" : y === "3" ? "rd" : "th"} Year`}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -668,6 +769,129 @@ const handleSubmit = async (e: React.FormEvent) => {
             >
               + Add Achievement
             </Button>
+          </div>
+
+          {/* Certifications */}
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold mb-4">Certifications</h2>
+            <div className="space-y-3">
+              {formData.certifications.map((cert, index) => (
+                <div key={index} className="rounded-lg p-6 border border-white/10 bg-transparent space-y-4 relative">
+                  <button 
+                    type="button"
+                    onClick={() => removeCertification(index)}
+                    className="absolute top-4 right-4 text-zinc-500 hover:text-red-500"
+                  >
+                    <Trash className="w-4 h-4" />
+                  </button>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-sm font-medium text-zinc-400">Certification Name</Label>
+                      <Input 
+                        value={cert.name} 
+                        onChange={(e) => handleCertificationChange(index, "name", e.target.value)} 
+                        className="bg-transparent border-white/10"
+                        placeholder="Certification name"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium text-zinc-400">Issuing Organization (Optional)</Label>
+                      <Input 
+                        value={cert.issuing_organization || ''} 
+                        onChange={(e) => handleCertificationChange(index, "issuing_organization", e.target.value)} 
+                        className="bg-transparent border-white/10"
+                        placeholder="Organization name"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="mt-4 border-white/10 text-white"
+                onClick={addCertification}
+              >
+                + Add Certification
+              </Button>
+            </div>
+          </div>
+
+          {/* Projects */}
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold mb-4">Projects</h2>
+            <div className="space-y-6">
+              {formData.projects.map((proj, index) => (
+                <div key={index} className="rounded-lg p-6 border border-white/10 bg-transparent space-y-4 relative">
+                  <button 
+                    type="button"
+                    onClick={() => setFormData(prev => ({
+                      ...prev,
+                      projects: prev.projects.filter((_, i) => i !== index)
+                    }))}
+                    className="absolute top-4 right-4 text-zinc-500 hover:text-red-500"
+                  >
+                    <Trash className="w-4 h-4" />
+                  </button>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-sm font-medium text-zinc-400">Project Name</Label>
+                      <Input 
+                        value={proj.name} 
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev,
+                          projects: prev.projects.map((p, i) =>
+                            i === index ? { ...p, name: e.target.value } : p
+                          )
+                        }))} 
+                        className="bg-transparent border-white/10"
+                        placeholder="Project name"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium text-zinc-400">Project Link (Optional)</Label>
+                      <Input 
+                        value={proj.link || ''} 
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev,
+                          projects: prev.projects.map((p, i) =>
+                            i === index ? { ...p, link: e.target.value } : p
+                          )
+                        }))} 
+                        className="bg-transparent border-white/10"
+                        placeholder="https://github.com/yourproject"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-zinc-400">Description</Label>
+                    <Textarea 
+                      value={proj.description} 
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev,
+                        projects: prev.projects.map((p, i) =>
+                          i === index ? { ...p, description: e.target.value } : p
+                        )
+                      }))} 
+                      className="bg-transparent border-white/10 min-h-[100px] resize-none"
+                      rows={3}
+                      placeholder="Describe your project"
+                    />
+                  </div>
+                </div>
+              ))}
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="mt-4 border-white/10 text-white"
+                onClick={() => setFormData(prev => ({
+                  ...prev,
+                  projects: [{ name: "", description: "", link: "" }, ...prev.projects]
+                }))}
+              >
+                + Add Project
+              </Button>
+            </div>
           </div>
 
           {/* Submit */}

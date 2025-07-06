@@ -54,6 +54,21 @@ export interface Link {
   url: string;
 }
 
+export interface Certification {
+  id: string;
+  member_id: string;
+  name: string;
+  issuing_organization?: string;
+}
+
+export interface Project {
+  id: string;
+  member_id: string;
+  name: string;
+  description: string;
+  link: string;
+}
+
 // Initialize database tables if they don't exist
 export async function initializeDatabase() {
   try {
@@ -126,6 +141,17 @@ export const MemberService = {
       .select('*')
       .eq('member_id', id);
 
+    // Fetch certifications
+    const { data: certifications } = await supabase
+      .from('certifications')
+      .select('*')
+      .eq('member_id', id);
+
+    // Fetch projects
+    const { data: projects } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('member_id', id);
 
     return {
       ...member,
@@ -133,6 +159,8 @@ export const MemberService = {
       achievements: achievements || [],
       experiences: experiences || [],
       links: links || [],
+      certifications: certifications || [],
+      projects: projects || [],
       resume_url: member.resume_url || null,
     }
   },
@@ -213,15 +241,15 @@ export const MemberService = {
 
   async createMember(member: Omit<Member, 'id' | 'created_at' | 'updated_at'>) {
     console.log('Creating member with data:', member); // Debug log
-    
+
     const { data, error } = await supabase
       .from('members')
       .insert([member])
       .select()
       .single();
-    
+
     console.log('Member creation result:', { data, error }); // Debug log
-    
+
     if (error) throw error;
     return data;
   },
@@ -240,17 +268,59 @@ export const MemberService = {
 
   async upsertMember(member: Member) {
     console.log('Upserting member with data:', member); // Debug log
-    
+
     const { data, error } = await supabase
       .from('members')
       .upsert([member])
       .select()
       .single();
-    
+
     console.log('Member upsert result:', { data, error }); // Debug log
-    
+
     if (error) throw error;
     return data;
+  }
+};
+
+// Certification operations
+export const CertificationService = {
+  async getMemberCertifications(memberId: string) {
+    const { data, error } = await supabase
+      .from('certifications')
+      .select('*')
+      .eq('member_id', memberId);
+
+    if (error) throw error;
+    return data || [];
+  },
+
+  async createCertification(certification: Omit<Certification, 'id'>) {
+    const { data, error } = await supabase
+      .from('certifications')
+      .insert(certification)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async createCertifications(certifications: Omit<Certification, 'id'>[]) {
+    const { data, error } = await supabase
+      .from('certifications')
+      .insert(certifications)
+      .select();
+    if (error) throw error;
+    return data;
+  },
+
+  async removeCertificationsByMemberId(memberId: string) {
+    const { error } = await supabase
+      .from('certifications')
+      .delete()
+      .eq('member_id', memberId);
+
+    if (error) throw error;
   }
 };
 
@@ -342,7 +412,7 @@ export const AchievementService = {
     return data;
   },
   
-  async createAchievement(achievement: Omit<Achievement, 'id' | 'created_at'>) {
+  async createAchievement(achievement: Omit<Achievement, 'id'>) {
     const { data, error } = await supabase
       .from('achievements')
       .insert([achievement])
@@ -352,6 +422,15 @@ export const AchievementService = {
     return data;
   },
   
+  async createAchievements(achievements: Omit<Achievement, 'id'>[]) {
+    const { data, error } = await supabase
+      .from('achievements')
+      .insert(achievements)
+      .select();
+    if (error) throw error;
+    return data;
+  },
+
   async deleteAchievement(achievementId: string) {
     const { error } = await supabase
       .from('achievements')
@@ -380,12 +459,21 @@ export const ExperienceService = {
     return data;
   },
   
-  async createExperience(experience: Omit<Experience, 'id' | 'created_at'>) {
+  async createExperience(experience: Omit<Experience, 'id'>) {
     const { data, error } = await supabase
       .from('experiences')
       .insert([experience])
       .select()
       .single();
+    if (error) throw error;
+    return data;
+  },
+
+  async createExperiences(experiences: Omit<Experience, 'id'>[]) {
+    const { data, error } = await supabase
+      .from('experiences')
+      .insert(experiences)
+      .select();
     if (error) throw error;
     return data;
   },
@@ -410,7 +498,7 @@ export const LinkService = {
     return data;
   },
   
-  async createLink(link: Omit<Link, 'id' | 'created_at'>) {
+  async createLink(link: Omit<Link, 'id'>) {
     const { data, error } = await supabase
       .from('links')
       .insert([link])
@@ -420,9 +508,76 @@ export const LinkService = {
     return data;
   },
 
+  async createLinks(links: Omit<Link, 'id'>[]) {
+    const { data, error } = await supabase
+      .from('links')
+      .insert(links)
+      .select();
+    if (error) throw error;
+    return data;
+  },
+
   async removeLinksByMemberId(memberId: string) {
     const { error } = await supabase
       .from('links')
+      .delete()
+      .eq('member_id', memberId);
+    if (error) throw error;
+  }
+};
+
+// Project database operations
+export const ProjectService = {
+  async getMemberProjects(memberId: string) {
+    const { data, error } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('member_id', memberId);
+    if (error) throw error;
+    return data || [];
+  },
+
+  async createProject(project: Omit<Project, 'id'>) {
+    const { data, error } = await supabase
+      .from('projects')
+      .insert([project])
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  async createProjects(projects: Omit<Project, 'id'>[]) {
+    const { data, error } = await supabase
+      .from('projects')
+      .insert(projects)
+      .select();
+    if (error) throw error;
+    return data;
+  },
+
+  async updateProject(id: string, project: Partial<Project>) {
+    const { data, error } = await supabase
+      .from('projects')
+      .update(project)
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  async removeProject(id: string) {
+    const { error } = await supabase
+      .from('projects')
+      .delete()
+      .eq('id', id);
+    if (error) throw error;
+  },
+
+  async removeProjectsByMemberId(memberId: string) {
+    const { error } = await supabase
+      .from('projects')
       .delete()
       .eq('member_id', memberId);
     if (error) throw error;

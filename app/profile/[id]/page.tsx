@@ -7,16 +7,20 @@ import {
   SkillService, 
   ExperienceService, 
   AchievementService,
-  LinkService
+  CertificationService,
+  LinkService,
+  ProjectService
 } from "@/lib/db";
 import { ProfileHeader } from "@/components/profile/profile-header";
 import { SkillSection } from "@/components/profile/skill-section";
 import { ExperienceSection } from "@/components/profile/experience-section";
 import { AchievementSection } from "@/components/profile/achievement-section";
+import { CertificationSection } from "@/components/profile/certification-section";
 import { ResumeSection } from "@/components/profile/resume-section";
 import { ExportProfileButton } from "@/components/profile/export-profile-button";
 import { EditProfileButton } from "@/components/profile/edit-profile-button";
 import { ToastProvider } from "@/components/ui/toast";
+import { ProjectSection } from '@/components/profile/project-section';
 
 interface ProfilePageProps {
   params: Promise<{
@@ -96,6 +100,8 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   const experiences = await ExperienceService.getMemberExperiences(actualMemberId);
   const achievements = await AchievementService.getMemberAchievements(actualMemberId);
   const links = await LinkService.getMemberLinks(actualMemberId);
+  const certifications = await CertificationService.getMemberCertifications(id);
+  const projects = await ProjectService.getMemberProjects(id);
   
   const isCurrentUser = user?.id === member.id;
   
@@ -151,7 +157,6 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
                 />
               </div>
             )}
-            
             {achievements.length > 0 && (
               <div className="bg-card rounded-lg border shadow-sm">
                 <AchievementSection 
@@ -159,6 +164,19 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
                   isEditable={isCurrentUser}
                 />
               </div>
+            )}
+            {certifications.length > 0 && (
+              <div className="bg-card rounded-lg border shadow-sm">
+                <CertificationSection 
+                  certifications={certifications}
+                />
+              </div>
+            )}
+            {projects.length > 0 && (
+              <ProjectSection 
+                projects={projects}
+                isEditable={isCurrentUser}
+              />
             )}
           </div>
           
@@ -170,14 +188,12 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
                 isEditable={isCurrentUser}
               />
             </div>
-            
-            
-              <div className="bg-card rounded-lg border shadow-sm">
-                <ResumeSection 
-                  resumeUrl={member.resume_url} 
-                  isEditable={isCurrentUser}
-                />
-              </div>
+            <div className="bg-card rounded-lg border shadow-sm">
+              <ResumeSection 
+                resumeUrl={member.resume_url} 
+                isEditable={isCurrentUser}
+              />
+            </div>
           </div>
         </div>
       </div>

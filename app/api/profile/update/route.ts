@@ -6,6 +6,8 @@ import {
   ExperienceService,
   AchievementService,
   LinkService,
+  CertificationService,
+  ProjectService,
 } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 
@@ -39,6 +41,8 @@ export async function POST(req: NextRequest) {
       experiences = [],
       achievements = [],
       links = [],
+      certifications = [],
+      projects = [],
       resume_url,
       isUpdate = false
     } = await req.json();
@@ -65,34 +69,65 @@ export async function POST(req: NextRequest) {
 
     await ExperienceService.removeExperiencesByMemberId(user.id);
     if (experiences && experiences.length > 0) {
-      await Promise.all(
-        experiences.map((exp: any) =>
-          ExperienceService.createExperience({ ...exp, member_id: user.id })
-        )
-      );
+      const experiencesToInsert = experiences.map((exp: any) => ({
+        ...exp,
+        member_id: user.id
+      }));
+      await ExperienceService.createExperiences(experiencesToInsert);
     }
 
     await AchievementService.removeAchievementsByMemberId(user.id);
     if (achievements && achievements.length > 0) {
-      await Promise.all(
-        achievements.map((desc: string) =>
-          AchievementService.createAchievement({
-            member_id: user.id,
-            description: desc,
-            title: 'Achievement',
-            date: new Date(),
-          })
-        )
-      );
+      const achievementsToInsert = achievements.map((desc: string) => ({
+        member_id: user.id,
+        description: desc,
+        title: 'Achievement',
+        date: new Date(),
+      }));
+      await AchievementService.createAchievements(achievementsToInsert);
     }
 
     await LinkService.removeLinksByMemberId(user.id);
     if (links && links.length > 0) {
-      await Promise.all(
-        links.map((link: any) =>
-          LinkService.createLink({ ...link, member_id: user.id })
-        )
-      );
+      const linksToInsert = links.map((link: any) => ({
+        ...link,
+        member_id: user.id
+      }));
+      await LinkService.createLinks(linksToInsert);
+    }
+     // 6. Clear and re-insert certifications (like achievements)
+    await CertificationService.removeCertificationsByMemberId(member.id);
+    if (certifications && certifications.length > 0) {
+      const certsToInsert = (certifications as any[])
+        .filter((cert: any) => cert.name && cert.name.trim())
+        .map((cert: any) => {
+          const obj: any = {
+            name: cert.name,
+            member_id: member.id,
+          };
+          if (cert.issuing_organization && cert.issuing_organization.trim() !== '') {
+            obj.issuing_organization = cert.issuing_organization;
+          }
+          return obj;
+        });
+      await CertificationService.createCertifications(certsToInsert);
+    }
+
+    // 7. Clear and re-insert projects (like certifications)
+    await ProjectService.removeProjectsByMemberId(member.id);
+    if (projects && projects.length > 0) {
+      const projectsToInsert = (projects as any[])
+        .filter((proj: any) => proj.name && proj.name.trim())
+        .map((proj: any) => {
+          const obj: any = {
+            name: proj.name,
+            description: proj.description,
+            link: proj.link,
+            member_id: member.id,
+          };
+          return obj;
+        });
+      await ProjectService.createProjects(projectsToInsert);
     }
 
     const userFolder = `resumes/${user.id}`;

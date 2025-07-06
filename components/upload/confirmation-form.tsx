@@ -27,6 +27,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabaseClient";
+import { Textarea } from "@/components/ui/textarea";
 
 interface ParsedData {
   id?: string;
@@ -36,6 +37,12 @@ interface ParsedData {
   year?: number;
   skills: string[];
   achievements: string[];
+  projects: {
+    id?: string;
+    name: string;
+    description: string;
+    link?: string;
+  }[];
 }
 
 interface ConfirmationFormProps {
@@ -48,133 +55,192 @@ export function ConfirmationForm({ parsedData }: ConfirmationFormProps) {
   const { toast } = useToast();
 
   const [userId, setUserId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [formData, setFormData] = useState<any>(null);
 
+  // Fetch user and projects before initializing formData
   useEffect(() => {
-    const getUser = async () => {
+    const getUserAndProjects = async () => {
       const {
         data: { user },
         error,
       } = await supabase.auth.getUser();
-
-      if (user) {
-        setUserId(user.id);
+      console.log('Fetched user:', user); // DEBUG
+      if (!user) {
+        setLoading(false);
+        return;
       }
-      else console.error("No session found", error);
+      setUserId(user.id);
+      // Fetch existing projects
+      let existingProjects: any[] = [];
+      try {
+        const res = await fetch(`/api/member/projects/${user.id}`);
+        if (res.ok) {
+          existingProjects = await res.json();
+        }
+        console.log('Fetched existingProjects:', existingProjects); // DEBUG
+      } catch (e) {
+        console.log('Error fetching projects:', e); // DEBUG
+      }
+      // Merge by id or name
+      const mergedProjects = [
+        ...existingProjects,
+        ...(parsedData.projects || []).filter(
+          np =>
+            !existingProjects.some(
+              (ep: any) => (ep.id && np.id && ep.id === np.id) || ep.name === np.name
+            )
+        ),
+      ];
+      console.log('Merged projects:', mergedProjects); // DEBUG
+      setFormData({
+        name: parsedData.name || user.user_metadata?.full_name || "",
+        email: parsedData.email || user.email || "",
+        domain: parsedData.domain || "",
+        year: parsedData.year || 1,
+        skills: parsedData.skills || [],
+        achievements: parsedData.achievements || [],
+        projects: mergedProjects,
+      });
+      setLoading(false);
     };
+    getUserAndProjects();
+  }, [parsedData]);
 
-    getUser();
-  }, []);
-
-  const [formData, setFormData] = useState({
-    name: parsedData.name || userFromStore?.user_metadata?.full_name || "",
-    email: parsedData.email || userFromStore?.email || "",
-    domain: parsedData.domain || "",
-    year: parsedData.year || 1,
-    skills: parsedData.skills || [],
-    achievements: parsedData.achievements || [],
-  });
+  useEffect(() => {
+    if (formData) {
+      console.log('Final formData.projects:', formData.projects); // DEBUG
+    }
+  }, [formData]);
 
   const [newSkill, setNewSkill] = useState("");
   const [newAchievement, setNewAchievement] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [newProject, setNewProject] = useState({ name: '', description: '', link: '' });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev: any) => ({ ...prev, [name]: value }));
   };
 
   const handleSelectChange = (name: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev: any) => ({ ...prev, [name]: value }));
   };
 
   const handleAddSkill = () => {
     if (newSkill.trim() === "" || formData.skills.includes(newSkill)) return;
-    setFormData((prev) => ({
+    setFormData((prev: any) => ({
       ...prev,
-      skills: [...prev.skills, newSkill],
+      skills: [newSkill, ...prev.skills],
     }));
     setNewSkill("");
   };
 
   const handleRemoveSkill = (skill: string) => {
-    setFormData((prev) => ({
+    setFormData((prev: any) => ({
       ...prev,
-      skills: prev.skills.filter((s) => s !== skill),
+      skills: prev.skills.filter((s: string) => s !== skill),
     }));
   };
 
   const handleAddAchievement = () => {
     if (newAchievement.trim() === "") return;
-    setFormData((prev) => ({
+    setFormData((prev: any) => ({
       ...prev,
-      achievements: [...prev.achievements, newAchievement],
+      achievements: [newAchievement, ...prev.achievements],
     }));
     setNewAchievement("");
   };
 
   const handleRemoveAchievement = (achievement: string) => {
-    setFormData((prev) => ({
+    setFormData((prev: any) => ({
       ...prev,
-      achievements: prev.achievements.filter((a) => a !== achievement),
+      achievements: prev.achievements.filter((a: string) => a !== achievement),
+    }));
+  };
+
+  const handleProjectChange = (index: number, field: string, value: string) => {
+    setFormData((prev: any) => ({
+      ...prev,
+      projects: prev.projects.map((proj: any, i: number) =>
+        i === index ? { ...proj, [field]: value } : proj
+      ),
+    }));
+  };
+
+  const addProject = () => {
+    if (!newProject.name.trim()) return;
+    setFormData((prev: any) => ({
+      ...prev,
+      projects: [{ ...newProject }, ...prev.projects],
+    }));
+    setNewProject({ name: '', description: '', link: '' });
+  };
+
+  const removeProject = (index: number) => {
+    setFormData((prev: any) => ({
+      ...prev,
+      projects: prev.projects.filter((_: any, i: number) => i !== index),
     }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setIsSubmitting(true);
+    e.preventDefault();
+    setIsSubmitting(true);
 
-  try {
-    const supabase = createClientComponentClient();
-    const { data: { session }, error } = await supabase.auth.getSession();
+    try {
+      const supabase = createClientComponentClient();
+      const { data: { session }, error } = await supabase.auth.getSession();
 
-    if (!session || !session.access_token) {
-      throw new Error("Not authenticated");
+      if (!session || !session.access_token) {
+        throw new Error("Not authenticated");
+      }
+
+      const token = session.access_token;
+
+      const payload = {
+        id: userId,
+        name: formData.name,
+        email: formData.email,
+        domain: formData.domain,
+        year: formData.year,
+        skills: formData.skills,
+        achievements: formData.achievements,
+        projects: formData.projects,
+      };
+
+      const response = await fetch('/api/profile/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`, 
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update profile');
+      }
+
+      const data = await response.json();
+
+      toast({
+        title: "Profile updated successfully",
+        description: "Your profile has been created/updated. Redirecting...",
+      });
+
+      setTimeout(() => {
+        router.push(`/profile/${data.id || userId}`);
+      }, 1500);
+    } catch (error) {
+      toast({
+        title: "Update failed",
+        description: "There was an error updating your profile. Please try again.",
+        variant: "destructive",
+      });
+      setIsSubmitting(false);
     }
-
-    const token = session.access_token;
-
-    const payload = {
-      id: userId,
-      name: formData.name,
-      email: formData.email,
-      domain: formData.domain,
-      year: formData.year,
-      skills: formData.skills,
-      achievements: formData.achievements,
-    };
-
-    const response = await fetch('/api/profile/update', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`, 
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to update profile');
-    }
-
-    const data = await response.json();
-
-    toast({
-      title: "Profile updated successfully",
-      description: "Your profile has been created/updated. Redirecting...",
-    });
-
-    setTimeout(() => {
-      router.push(`/profile/${data.id || userId}`);
-    }, 1500);
-  } catch (error) {
-    toast({
-      title: "Update failed",
-      description: "There was an error updating your profile. Please try again.",
-      variant: "destructive",
-    });
-    setIsSubmitting(false);
-  }
-};
+  };
 
   const domains = [
     "Frontend Development", "Backend Development", "Full Stack Development",
@@ -183,6 +249,10 @@ export function ConfirmationForm({ parsedData }: ConfirmationFormProps) {
     "Data Science", "Machine Learning", "UI/UX Design",
     "Cybersecurity", "Blockchain Development",
   ];
+
+  if (loading || !formData) {
+    return <div>Loading projects...</div>;
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8 w-full px-4">
@@ -248,7 +318,7 @@ export function ConfirmationForm({ parsedData }: ConfirmationFormProps) {
                   <SelectItem value="2">2nd Year</SelectItem>
                   <SelectItem value="3">3rd Year</SelectItem>
                   <SelectItem value="4">4th Year</SelectItem>
-                  <SelectItem value="5">5th Year</SelectItem>
+                  <SelectItem value="alumni">Alumni</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -259,7 +329,7 @@ export function ConfirmationForm({ parsedData }: ConfirmationFormProps) {
           <div className="space-y-4">
             <Label>Skills</Label>
             <div className="flex flex-wrap gap-2 mb-3">
-              {formData.skills.map((skill) => (
+              {formData.skills.map((skill: string) => (
                 <Badge
                   key={skill}
                   variant="secondary"
@@ -305,7 +375,7 @@ export function ConfirmationForm({ parsedData }: ConfirmationFormProps) {
           <div className="space-y-4">
             <Label>Achievements</Label>
             <div className="space-y-2 mb-3">
-              {formData.achievements.map((achievement, index) => (
+              {formData.achievements.map((achievement: string, index: number) => (
                 <div
                   key={index}
                   className="flex items-center justify-between bg-muted/50 p-2 rounded-md"
@@ -341,6 +411,77 @@ export function ConfirmationForm({ parsedData }: ConfirmationFormProps) {
               <Button type="button" onClick={handleAddAchievement} variant="outline">
                 <Plus className="h-4 w-4 mr-1" />
                 Add
+              </Button>
+            </div>
+          </div>
+
+          <Separator />
+
+          <div>
+            <Label>Projects</Label>
+            <div className="space-y-4 mt-2">
+              {formData.projects.map((proj: { name: string; description: string; link?: string }, index: number) => (
+                <div key={index} className="border rounded-lg p-4 space-y-2 relative">
+                  <div className="flex flex-col md:flex-row md:items-center md:gap-4">
+                    <Input
+                      className="mb-2 md:mb-0"
+                      placeholder="Project name"
+                      value={proj.name}
+                      onChange={e => handleProjectChange(index, 'name', e.target.value)}
+                      required
+                    />
+                    <Input
+                      className="mb-2 md:mb-0"
+                      placeholder="Project link (optional)"
+                      value={proj.link || ''}
+                      onChange={e => handleProjectChange(index, 'link', e.target.value)}
+                    />
+                  </div>
+                  <Textarea
+                    placeholder="Project description"
+                    value={proj.description}
+                    onChange={e => handleProjectChange(index, 'description', e.target.value)}
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    className="absolute top-2 right-2"
+                    onClick={() => removeProject(index)}
+                  >
+                    <Trash className="w-4 h-4" />
+                  </Button>
+                </div>
+              ))}
+              <div className="flex flex-col md:flex-row md:items-center md:gap-4 mt-2">
+                <Input
+                  className="mb-2 md:mb-0"
+                  placeholder="Project name"
+                  value={newProject.name}
+                  onChange={e => setNewProject({ ...newProject, name: e.target.value })}
+                />
+                <Input
+                  className="mb-2 md:mb-0"
+                  placeholder="Project link (optional)"
+                  value={newProject.link}
+                  onChange={e => setNewProject({ ...newProject, link: e.target.value })}
+                />
+              </div>
+              <Textarea
+                placeholder="Project description"
+                value={newProject.description}
+                onChange={e => setNewProject({ ...newProject, description: e.target.value })}
+                className="mt-2"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-2"
+                onClick={addProject}
+                disabled={!newProject.name.trim()}
+              >
+                <Plus className="w-4 h-4 mr-1" /> Add Project
               </Button>
             </div>
           </div>

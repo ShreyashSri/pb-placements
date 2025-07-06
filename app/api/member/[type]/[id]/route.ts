@@ -7,34 +7,31 @@ import {
   ExperienceService,
   LinkService,
   SkillService,
-  MemberService
+  MemberService,
+  CertificationService,
+  ProjectService,
 } from '@/lib/db';
 
-// This handles GET requests for each type
 export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ type: string; id: string }> }
+  req: NextRequest,
+  context: any
 ) {
-  const { type, id } = await params;
+  const { type, id } = context.params;
 
   try {
     switch (type) {
-      case 'achievements': {
-        const achievements = await AchievementService.getMemberAchievements(id);
-        return NextResponse.json(achievements);
-      }
-      case 'experience': {
-        const experiences = await ExperienceService.getMemberExperiences(id);
-        return NextResponse.json(experiences);
-      }
-      case 'links': {
-        const links = await LinkService.getMemberLinks(id);
-        return NextResponse.json(links);
-      }
-      case 'skills': {
-        const skills = await SkillService.getMemberSkills(id);
-        return NextResponse.json(skills);
-      }
+      case 'achievements':
+        return NextResponse.json(await AchievementService.getMemberAchievements(id));
+      case 'experience':
+        return NextResponse.json(await ExperienceService.getMemberExperiences(id));
+      case 'links':
+        return NextResponse.json(await LinkService.getMemberLinks(id));
+      case 'skills':
+        return NextResponse.json(await SkillService.getMemberSkills(id));
+      case 'certifications':
+        return NextResponse.json(await CertificationService.getMemberCertifications(id));
+      case 'projects':
+        return NextResponse.json(await ProjectService.getMemberProjects(id));
       case 'profile': {
         const member = await MemberService.getMemberById(id);
         if (!member) {
@@ -47,21 +44,17 @@ export async function GET(
     }
   } catch (error) {
     console.error(`Error fetching ${type}:`, error);
-    return NextResponse.json(
-      { error: `Failed to fetch ${type}` },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: `Failed to fetch ${type}` }, { status: 500 });
   }
 }
 
-// This handles DELETE for achievements 
 export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ type: string; id: string }> }
+  req: NextRequest,
+  context: any
 ) {
-  const { type, id } = await params;
+  const { type, id } = context.params;
 
-  if (type !== 'achievements') {
+  if (type !== 'achievements' && type !== 'projects') {
     return NextResponse.json({ error: 'DELETE not supported for this type' }, { status: 405 });
   }
 
@@ -73,13 +66,17 @@ export async function DELETE(
   }
 
   try {
-    await AchievementService.deleteAchievement(id);
-    return NextResponse.json({ message: 'Achievement deleted successfully' });
+    if (type === 'achievements') {
+      await AchievementService.deleteAchievement(id);
+      return NextResponse.json({ message: 'Achievement deleted successfully' });
+    }
+    if (type === 'projects') {
+      await ProjectService.removeProject(id);
+      return NextResponse.json({ message: 'Project deleted successfully' });
+    }
   } catch (error) {
-    console.error('Error deleting achievement:', error);
-    return NextResponse.json(
-      { error: 'Failed to delete achievement' },
-      { status: 500 }
-    );
+    console.error(`Error deleting ${type}:`, error);
+    return NextResponse.json({ error: `Failed to delete ${type}` }, { status: 500 });
   }
 }
+

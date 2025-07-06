@@ -25,10 +25,18 @@ interface ParsedResumeData {
     end_date: string | null;
     is_current: boolean;
   }[];
+  certifications: {
+    name: string;
+    issuing_organization?: string;
+  }[];
+  projects: {
+    name: string;
+    description: string;
+    link?: string;
+  }[];
   github_url?: string;
   linkedin_url?: string;
   resume_url?: string;
-  resume_filename?: string;
 }
 
 /**
@@ -60,12 +68,14 @@ export async function analyzeWithGemini(text: string): Promise<ParsedResumeData>
     1. Full name
     2. Email address
     3. A list of technical skills and technologies [Here First find the skills section from the resume. If its not present keep it empty]
-    4. The primary domain/field (e.g., Frontend Development, Data Science)
+    4. The primary domain/field analyse it effectively after analysing the skillset (e.g., Frontend Development,cybersecurity,backend development,devops,Data Science etc)
     5. Graduation year (YYYY format)
-    6. A list of notable achievements [Dont put any dates for achievements]
-    7. Work experiences (including company name, role, description, start date, end date, and if it's current)
-    8. GitHub URL if present
-    9. LinkedIn URL if present must be like [https://linkedin.com/in/username]
+    6. A list of notable achievements, take it from the achievements section of resume only. [Dont put any dates for achievements]
+    7. Work experiences take it from the experience section of the resume (including company name, role, description, start date, end date, and if it's current)
+    8. Certifications take it from the certifications section of the resume (including certification name, issuing organization)
+    9. Projects: take it from the projects section of the resume (including project name, description, and link if present)
+    10. GitHub URL if present
+    11. LinkedIn URL if present must be like [https://linkedin.com/in/username]
 
     Resume text:
     ${text}
@@ -86,6 +96,19 @@ export async function analyzeWithGemini(text: string): Promise<ParsedResumeData>
           "start_date": "YYYY-MM-DD",
           "end_date": "YYYY-MM-DD or null",
           "is_current": boolean
+        }
+      ],
+      "certifications": [
+        {
+          "name": "certification name",
+          "issuing_organization": "issuing organization"
+        }
+      ],
+      "projects": [
+        {
+          "name": "project name",
+          "description": "project description",
+          "link": "project link or null"
         }
       ],
       "github_url": "github profile url or null",
@@ -119,8 +142,10 @@ export async function analyzeWithGemini(text: string): Promise<ParsedResumeData>
       skills: parsed.skills || [],
       domain: parsed.domain,
       year: yearOfStudy,
-      achievements: parsed.achievements || [],
-      experiences: parsed.experiences || [],
+      achievements: (parsed.achievements || []),
+      experiences: (parsed.experiences || []),
+      certifications: (parsed.certifications || []),
+      projects: (parsed.projects || []),
       github_url: parsed.github_url,
       linkedin_url: parsed.linkedin_url
     };
@@ -134,6 +159,8 @@ export async function analyzeWithGemini(text: string): Promise<ParsedResumeData>
       year: undefined,
       achievements: [],
       experiences: [],
+      certifications: [],
+      projects: [],
       github_url: undefined,
       linkedin_url: undefined
     };
@@ -243,7 +270,6 @@ const YEAR_PATTERNS = [
   { pattern: /2nd year|second year|sophomore/i, year: 2 },
   { pattern: /3rd year|third year|junior/i, year: 3 },
   { pattern: /4th year|fourth year|senior/i, year: 4 },
-  { pattern: /5th year|fifth year/i, year: 5 },
 ];
 
 const ACHIEVEMENT_PATTERNS = [
