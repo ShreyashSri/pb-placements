@@ -77,8 +77,8 @@ export async function POST(request: NextRequest) {
 
     const publicResumeUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/resume/${data.path}`;
 
-    const extractedText = await extractTextFromPDF(fileBuffer);
-    const parsedData = await analyzeWithGemini(extractedText);
+    const { text: extractedText, links: extractedLinks } = await extractTextFromPDF(fileBuffer);
+    const parsedData = await analyzeWithGemini(extractedText, extractedLinks);
 
     parsedData.resume_url = publicResumeUrl;
 
