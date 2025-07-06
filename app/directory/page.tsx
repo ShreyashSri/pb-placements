@@ -4,10 +4,18 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { SearchFilters } from "@/components/directory/search-filters";
 import { MemberCard } from "@/components/directory/member-card";
-import { ExportActions } from "@/components/directory/export-actions";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { Download, Share2, Mailbox, X, Ghost } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useToast } from "@/hooks/use-toast";
 import { createClient } from '@supabase/supabase-js';
 
 interface Member {
@@ -35,11 +43,13 @@ const convertYearToString = (year: number): string => {
 
 function DirectoryContent() {
   const searchParams = useSearchParams();
+  const { toast } = useToast();
   
   // State for members data
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
   
   // State for available filter options
   const [allSkills, setAllSkills] = useState<string[]>([]);
@@ -137,6 +147,132 @@ function DirectoryContent() {
   const clearSelections = () => {
     setSelectedMembers([]);
   };
+
+  const handleExportToEmail = async () => {
+  if (selectedMembers.length === 0) {
+    toast({
+      title: "No members selected",
+      description: "Please select members to export",
+      variant: "destructive",
+    });
+    return;
+  }
+
+  setIsExporting(true);
+  try {
+    const memberDataPromises = selectedMembers.map(async (member) => {
+      try {
+        const res = await fetch('/api/export/email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            memberId: member.id,
+            memberName: member.name,
+            memberEmail: member.email,
+            profileLink: `${window.location.origin}/profile/${member.id}`,
+          }),
+        });
+
+        const data = await res.json();
+
+        return {
+          name: member.name,
+          email: member.email,
+          profileLink: `${window.location.origin}/profile/${member.id}`,
+          resumeUrl: res.ok && data?.resumeUrl ? data.resumeUrl : 'Resume not available',
+        };
+      } catch (error) {
+        return {
+          name: member.name,
+          email: member.email,
+          profileLink: `${window.location.origin}/profile/${member.id}`,
+          resumeUrl: 'Resume not available',
+        };
+      }
+    });
+
+    const memberData = await Promise.all(memberDataPromises);
+
+    const memberList = memberData.map((member, index) => 
+      `${index + 1}. ${member.name} (${member.email})\n   - Profile: ${member.profileLink}\n   - Resume: ${member.resumeUrl}`
+    ).join('\n\n');
+
+    const subject = `Recommended Developers from Point Blank (${selectedMembers.length} profile${selectedMembers.length > 1 ? 's' : ''})`;
+
+    const body = `Hi,
+
+I hope this message finds you well.
+
+I'm writing to recommend the following talented developers from our tech community Point Blank:
+
+${memberList}
+
+Please feel free to reach out if you'd like more details or want to connect with any of them directly.
+
+Best regards,
+[Your Name]`;
+
+    const gmailDraftURL = `https://mail.google.com/mail/u/0/?view=cm&fs=1&to=&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.open(gmailDraftURL, '_blank');
+
+    toast({
+      title: "Email draft created",
+      description: `Gmail draft prepared with ${selectedMembers.length} profile${selectedMembers.length > 1 ? 's' : ''}`,
+    });
+
+  } catch (error) {
+    console.error('Export to email failed:', error);
+    toast({
+      title: "Export failed",
+      description: "Could not create email draft. Please try again.",
+      variant: "destructive",
+    });
+  } finally {
+    setIsExporting(false);
+  }
+};
+
+
+
+  const handleShareProfiles = () => {
+    if (selectedMembers.length === 0) {
+      toast({
+        title: "No members selected",
+        description: "Please select at least one member to share",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const profileSummary = selectedMembers.map((member, index) => 
+      `${index + 1}. ${member.name} - ${member.domain} (${member.year_of_study})\n   Profile: ${window.location.origin}/profile/${member.id}`
+    ).join('\n\n');
+    
+    const shareText = `Check out these ${selectedMembers.length} talented developer${selectedMembers.length > 1 ? 's' : ''} from Point Blank:\n\n${profileSummary}`;
+    
+    if (navigator.share) {
+      navigator.share({
+        title: `${selectedMembers.length} Developer Profile${selectedMembers.length > 1 ? 's' : ''} from Point Blank`,
+        text: shareText,
+        url: window.location.href,
+      })
+      .then(() => {
+        toast({
+          title: "Shared successfully",
+          description: `${selectedMembers.length} profile${selectedMembers.length > 1 ? 's' : ''} shared successfully`,
+        });
+      })
+      .catch(() => {
+      });
+    } else {
+      navigator.clipboard.writeText(shareText);
+      
+      toast({
+        title: "Profiles copied",
+        description: `${selectedMembers.length} profile${selectedMembers.length > 1 ? 's' : ''} copied to clipboard`,
+      });
+    }
+  };
   
   // Filter members by selected skills (if any)
   const filteredMembers = selectedSkills.length === 0
@@ -169,6 +305,67 @@ function DirectoryContent() {
       <div className="mb-8">
         <SearchFilters allSkills={allSkills} domains={domains} years={years} />
       </div>
+      
+      {/* Export Actions for Selected Members */}
+      {selectionMode && selectedMembers.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 w-[95%] sm:w-auto sm:min-w-[400px] bg-card border border-border shadow-lg rounded-2xl p-4 animate-fade-in">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">
+                {selectedMembers.length} member{selectedMembers.length !== 1 ? 's' : ''} selected
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={clearSelections}
+                className="h-8 w-8 p-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  const emails = selectedMembers.map(m => m.email).join(', ');
+                  navigator.clipboard.writeText(emails);
+                  toast({
+                    title: "Copied to clipboard",
+                    description: `${selectedMembers.length} email${selectedMembers.length > 1 ? 's' : ''} copied`,
+                  });
+                }}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Copy Emails
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    size="sm" 
+                    className="bg-green-500 hover:bg-green-600"
+                    disabled={isExporting}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    {isExporting ? 'Exporting...' : 'Export Selected'}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={handleExportToEmail} disabled={isExporting}>
+                    <Mailbox className="h-4 w-4 mr-2"/>
+                    Export to Email
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleShareProfiles}>
+                    <Share2 className="h-4 w-4 mr-2" />
+                    Share Profiles
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+        </div>
+      )}
       
       {loading ? (
         <div className="flex justify-center py-12">
@@ -203,11 +400,6 @@ function DirectoryContent() {
           ))}
         </div>
       )}
-      
-      <ExportActions
-        selectedMembers={selectedMembers}
-        clearSelections={clearSelections}
-      />
     </div>
   );
 }
