@@ -52,7 +52,7 @@ function PageContent() {
         <div>
           <HeroSection />
         </div>
-        <div className="py-8 md:py-12">
+        <div className="pb-8 md:pb-12">
           <FeaturesSection />
         </div>
       </div>
