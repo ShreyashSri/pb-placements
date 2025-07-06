@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { createClient } from '@supabase/supabase-js';
-
+import LoadingBrackets from '@/components/ui/loading-brackets';
 interface Member {
   id: string;
   name: string;
@@ -392,11 +392,8 @@ Best regards,
       )}
       
       {loading ? (
-        <div className="flex justify-center py-12">
-          <div className="animate-pulse text-center">
-            <div className="h-6 w-32 bg-muted rounded mx-auto"></div>
-            <p className="text-muted-foreground mt-2">Loading members...</p>
-          </div>
+        <div className="min-h-[50vh] flex items-center justify-center">
+          <LoadingBrackets />
         </div>
       ) : error ? (
         <div className="text-center py-12">
