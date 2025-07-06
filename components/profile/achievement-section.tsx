@@ -52,15 +52,11 @@ export function AchievementSection({
   };
   
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold">Achievements</h2>
-      </div>
-
+    <div>
       <div className="space-y-4">
         {achievements.map((achievement) => (
           <div key={achievement.id} className="flex justify-between items-center">
-            <div className="flex gap-4 items-center">
+            <div className="flex gap-2 items-center">
               <div >
                 <Trophy className="h-5 w-5 text-green-400" />
               </div>

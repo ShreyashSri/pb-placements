@@ -102,8 +102,8 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   const experiences = await ExperienceService.getMemberExperiences(actualMemberId);
   const achievements = await AchievementService.getMemberAchievements(actualMemberId);
   const links = await LinkService.getMemberLinks(actualMemberId);
-  const certifications = await CertificationService.getMemberCertifications(id);
-  const projects = await ProjectService.getMemberProjects(id);
+  const certifications = await CertificationService.getMemberCertifications(actualMemberId);
+  const projects = await ProjectService.getMemberProjects(actualMemberId);
   
   const isCurrentUser = user?.id === member.id;
   
@@ -259,6 +259,86 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
                 </Tabs>
               </div>
             </div>
+             {/* Certifications and Projects Tabs*/}
+<div className="group transform hover:scale-[1.02] transition-all duration-500">
+  <div className="bg-black rounded-2xl border border-gray-800 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden">
+    <Tabs defaultValue="projects" className="w-full">
+      <TabsList className="grid w-full grid-cols-2 bg-black rounded-t-xl p-0">
+        <TabsTrigger 
+          value="projects" 
+          className="data-[state=active]:bg-gray-800 data-[state=active]:text-green-400 rounded-tl-lg py-4 border-r border-gray-800"
+        >
+          Projects
+        </TabsTrigger>
+        <TabsTrigger 
+          value="certifications" 
+          className="data-[state=active]:bg-gray-800 data-[state=active]:text-green-400 rounded-tr-lg py-4"
+        >
+          Certifications
+        </TabsTrigger>
+      </TabsList>
+
+      <div className="p-6">
+        <TabsContent value="projects">
+          <div className="space-y-4 max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900">
+            {projects.length > 0 ? (
+              projects.map((project) => (
+                <div key={project.id} className="border-b border-gray-800 pb-4 last:border-0 last:pb-0">
+                  <h3 className="text-base font-semibold text-white">{project.name}</h3>
+                  {project.date && (
+                    <p className="text-gray-400 text-xs mt-1">{project.date}</p>
+                  )}
+                  {project.description && (
+                    <p className="text-gray-300 text-sm mt-2">{project.description}</p>
+                  )}
+                  {project.link && (
+                    <a 
+                      href={project.link} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-green-400 hover:underline text-sm inline-block mt-2"
+                    >
+                      View Project
+                    </a>
+                  )}
+                </div>
+              ))
+            ) : (
+              <div className="text-center text-gray-400 text-sm py-6">
+                No projects information available
+              </div>
+            )}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="certifications">
+          <div className="space-y-4 max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900">
+            {certifications.length > 0 ? (
+              certifications.map((cert) => (
+                <div key={cert.id} className="border-b border-gray-800 pb-4 last:border-0 last:pb-0">
+                  <h3 className="text-base  text-white">{cert.name}</h3>
+                  {cert.issuer && (
+                    <p className="text-green-400 text-sm mt-1">{cert.issuer}</p>
+                  )}
+                  {cert.date && (
+                    <p className="text-gray-400 text-xs mt-1">{cert.date}</p>
+                  )}
+                  {cert.description && (
+                    <p className="text-gray-300 text-sm mt-2">{cert.description}</p>
+                  )}
+                </div>
+              ))
+            ) : (
+              <div className="text-center text-gray-400 text-sm py-6">
+                No certifications information available
+              </div>
+            )}
+          </div>
+        </TabsContent>
+      </div>
+    </Tabs>
+  </div>
+</div>
           </div>
           
           {/* Right Column - Sidebar */}
@@ -274,8 +354,6 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
                 </div>
               </div>
             </div>
-
-            {/* Resume Section */}
             <div className="group transform hover:scale-[1.02] transition-all duration-500">
               <div className="bg-black rounded-2xl border border-gray-800 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden">
                 <div className="relative">
@@ -292,3 +370,4 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
     </div>
   );
 }
+            
