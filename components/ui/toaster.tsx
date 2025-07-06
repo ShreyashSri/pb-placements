@@ -34,9 +34,8 @@ export function Toaster() {
         style={{
           position: "fixed",
           top: "4rem",
-          width: "250px",
-          height: "50px",
-          maxWidth: "calc(100% - 10rem)",
+          width: "100%",
+          maxWidth: "min(90vw, 350px)",
         }}
       />
     </ToastProvider>
