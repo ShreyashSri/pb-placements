@@ -41,6 +41,13 @@ const convertYearToString = (year: number): string => {
   return 'Alumni';
 };
 
+const getOrigin = (): string => {
+  if (typeof window !== "undefined") {
+    return window.location.origin;
+  }
+  return process.env.NEXT_PUBLIC_SITE_URL || "https://career.pointblank.club";
+};
+
 function DirectoryContent() {
   const searchParams = useSearchParams();
   const { toast } = useToast();
@@ -62,6 +69,13 @@ function DirectoryContent() {
   
   // State for selected skills
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+  
+  const [currentOrigin, setCurrentOrigin] = useState<string>("");
+  
+  // Set origin on client side
+  useEffect(() => {
+    setCurrentOrigin(getOrigin());
+  }, []);
   
   // Fetch all skills and domains on mount
   useEffect(() => {
@@ -169,7 +183,7 @@ function DirectoryContent() {
             memberId: member.id,
             memberName: member.name,
             memberEmail: member.email,
-            profileLink: `${window.location.origin}/profile/${member.id}`,
+            profileLink: `${currentOrigin}/profile/${member.id}`,
           }),
         });
 
@@ -178,14 +192,14 @@ function DirectoryContent() {
         return {
           name: member.name,
           email: member.email,
-          profileLink: `${window.location.origin}/profile/${member.id}`,
+          profileLink: `${currentOrigin}/profile/${member.id}`,
           resumeUrl: res.ok && data?.resumeUrl ? data.resumeUrl : 'Resume not available',
         };
       } catch (error) {
         return {
           name: member.name,
           email: member.email,
-          profileLink: `${window.location.origin}/profile/${member.id}`,
+          profileLink: `${currentOrigin}/profile/${member.id}`,
           resumeUrl: 'Resume not available',
         };
       }
@@ -245,7 +259,7 @@ Best regards,
     }
 
     const profileSummary = selectedMembers.map((member, index) => 
-      `${index + 1}. ${member.name} - ${member.domain} (${member.year_of_study})\n   Profile: ${window.location.origin}/profile/${member.id}`
+      `${index + 1}. ${member.name} - ${member.domain} (${member.year_of_study})\n   Profile: ${currentOrigin}/profile/${member.id}`
     ).join('\n\n');
     
     const shareText = `Check out these ${selectedMembers.length} talented developer${selectedMembers.length > 1 ? 's' : ''} from Point Blank:\n\n${profileSummary}`;
@@ -254,7 +268,7 @@ Best regards,
       navigator.share({
         title: `${selectedMembers.length} Developer Profile${selectedMembers.length > 1 ? 's' : ''} from Point Blank`,
         text: shareText,
-        url: window.location.href,
+        url: currentOrigin,
       })
       .then(() => {
         toast({
