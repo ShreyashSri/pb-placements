@@ -63,4 +63,25 @@ jobs:
               try {
                 await github.rest.issues.addAssignees({
                   owner,
-                  re
+                  repo,
+                  issue_number: issueNumber,
+                  assignees: [targetUser]
+                });
+                await postComment(`✅ Assigned @${targetUser} as requested by maintainer @${commenter}.`);
+              } catch (err) {
+                await postComment(`❌ Failed to assign @${targetUser}. Maybe they don't have permission or aren't a contributor.`);
+              }
+            } else {
+              const assignee = commenter;
+              try {
+                await github.rest.issues.addAssignees({
+                  owner,
+                  repo,
+                  issue_number: issueNumber,
+                  assignees: [assignee]
+                });
+                await postComment(`✅ Assigned @${assignee} to this issue.`);
+              } catch (err) {
+                await postComment(`❌ Failed to assign @${assignee}. Do you have permission or are you a contributor?`);
+              }
+            }
