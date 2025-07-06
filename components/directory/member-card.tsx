@@ -25,14 +25,27 @@ interface MemberCardProps {
   isSelected: boolean;
   onSelect: (id: string, isSelected: boolean) => void;
   selectionMode: boolean;
+  searchTerm?: string;
 }
 
-export function MemberCard({ member, isSelected, onSelect, selectionMode }: MemberCardProps) {
+export function MemberCard({ member, isSelected, onSelect, selectionMode, searchTerm }: MemberCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   
-  // Show at most 4 skills on the card
-  const displaySkills = member.skills?.slice(0, 4) || [];
-  const hasMoreSkills = member.skills?.length > 4;
+  // Sort skills to bring matching ones to the top
+  const sortedSkills = [...(member.skills || [])].sort((a, b) => {
+    const aMatches = searchTerm && a.toLowerCase().includes(searchTerm.toLowerCase());
+    const bMatches = searchTerm && b.toLowerCase().includes(searchTerm.toLowerCase());
+    return (aMatches === bMatches) ? 0 : aMatches ? -1 : 1;
+  });
+
+  // Determine which skills to show 
+  const matchingSkills = searchTerm 
+    ? sortedSkills.filter(skill => skill.toLowerCase().includes(searchTerm.toLowerCase()))
+    : [];
+  const displaySkills = searchTerm
+    ? [...matchingSkills, ...sortedSkills.filter(skill => !matchingSkills.includes(skill))].slice(0, 6)
+    : sortedSkills.slice(0, 4);
+  const hasMoreSkills = member.skills?.length > displaySkills.length;
 
   const handleSelect = () => {
     onSelect(member.id, !isSelected);
@@ -117,13 +130,21 @@ export function MemberCard({ member, isSelected, onSelect, selectionMode }: Memb
         <CardContent className="p-4">
           <div className="flex flex-wrap gap-1.5">
             {displaySkills.map((skill) => (
-              <Badge key={skill} variant="outline" className="bg-background/80">
+              <Badge 
+                key={skill} 
+                variant="outline" 
+                className={cn(
+                  "bg-background/80",
+                  searchTerm && skill.toLowerCase().includes(searchTerm.toLowerCase()) && 
+                    "bg-green-400 text-black border-green-500"
+                )}
+              >
                 {skill}
               </Badge>
             ))}
             {hasMoreSkills && (
               <Badge variant="outline" className="bg-background/50 text-muted-foreground">
-                +{member.skills.length - 4} more
+                +{member.skills.length - displaySkills.length} more
               </Badge>
             )}
           </div>

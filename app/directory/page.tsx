@@ -198,6 +198,7 @@ function DirectoryContent() {
               isSelected={selectedMembers.some(m => m.id === member.id)}
               onSelect={handleSelectMember}
               selectionMode={selectionMode}
+              searchTerm={searchParams.get('search') || ''}
             />
           ))}
         </div>
