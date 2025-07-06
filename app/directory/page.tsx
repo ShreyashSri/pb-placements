@@ -173,6 +173,9 @@ function DirectoryContent() {
   }
 
   setIsExporting(true);
+
+  const gmailWindow = window.open('', '_blank');
+
   try {
     const memberDataPromises = selectedMembers.map(async (member) => {
       try {
@@ -227,7 +230,10 @@ Best regards,
 [Your Name]`;
 
     const gmailDraftURL = `https://mail.google.com/mail/u/0/?view=cm&fs=1&to=&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    window.open(gmailDraftURL, '_blank');
+
+    if (gmailWindow) {
+      gmailWindow.location.href = gmailDraftURL;
+    }
 
     toast({
       title: "Email draft created",
@@ -241,6 +247,10 @@ Best regards,
       description: "Could not create email draft. Please try again.",
       variant: "destructive",
     });
+
+    if (gmailWindow) {
+      gmailWindow.close();
+    }
   } finally {
     setIsExporting(false);
   }
