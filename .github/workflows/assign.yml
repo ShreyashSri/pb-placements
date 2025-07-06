@@ -37,12 +37,12 @@ jobs:
                 owner,
                 repo,
                 issue_number: issueNumber,
-                body: `**assign_me_zaddy 🤖 says:**\n\n${body}`
+                body
               });
             };
 
             const commandMatch = commentBody.match(/^\/assign\s*(.*)?$/);
-            if (!commandMatch) return; // Ignore non-/assign comments
+            if (!commandMatch) return;
 
             const mentionedUser = commandMatch[1]?.trim();
             const commenterIsMaintainer = await isMaintainer(commenter);
