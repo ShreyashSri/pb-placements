@@ -513,14 +513,6 @@ const handleSubmit = async (e: React.FormEvent) => {
   }
 };
 
-  if (loading) {
-    return (
-    <div className="min-h-screen bg-black flex items-center justify-center">
-      <LoadingBrackets />
-    </div>
-  );
-  }
-
   return (
     <div className="min-h-screen px-6 py-10 text-white bg-[#010303] flex justify-center items-start">
       <motion.div 
