@@ -159,121 +159,13 @@ export async function extractTextFromPDF(pdfBuffer: ArrayBuffer): Promise<{ text
 }
 
 /**
- * Extracts GitHub and LinkedIn URLs from text with fallback for different casing
- * @param text Resume text
- * @param extractedLinks Already extracted links from PDF annotations
- * @returns Object with github_url and linkedin_url
- */
-function extractSocialLinks(text: string, extractedLinks: string[]): { github_url?: string; linkedin_url?: string } {
-  const result: { github_url?: string; linkedin_url?: string } = {};
-  
-  if (extractedLinks.length > 0) {
-    const githubLink = extractedLinks.find(link => 
-      link.includes('github.com') || link.includes('github.io')
-    );
-    if (githubLink) {
-      result.github_url = githubLink;
-    }
-    const linkedinLink = extractedLinks.find(link => 
-      link.includes('linkedin.com') || link.includes('linked.in')
-    );
-    if (linkedinLink) {
-      result.linkedin_url = linkedinLink;
-    }
-  }
-  if (!result.github_url) {
-    const githubUrlPatterns = [
-      /https?:\/\/(?:www\.)?github\.com\/[a-zA-Z0-9_-]+/gi,
-      /github\.com\/[a-zA-Z0-9_-]+/gi,
-      /@github\.com\/[a-zA-Z0-9_-]+/gi
-    ];
-    
-    for (const pattern of githubUrlPatterns) {
-      const match = text.match(pattern);
-      if (match) {
-        let url = match[0];
-        if (!url.startsWith('http')) {
-          url = 'https://' + url.replace('@', '');
-        }
-        result.github_url = url;
-        break;
-      }
-    }
-  }
-  
-  if (!result.linkedin_url) {
-    const linkedinUrlPatterns = [
-      /https?:\/\/(?:www\.)?linkedin\.com\/in\/[a-zA-Z0-9_-]+/gi,
-      /linkedin\.com\/in\/[a-zA-Z0-9_-]+/gi,
-      /@linkedin\.com\/in\/[a-zA-Z0-9_-]+/gi
-    ];
-    
-    for (const pattern of linkedinUrlPatterns) {
-      const match = text.match(pattern);
-      if (match) {
-        let url = match[0];
-        if (!url.startsWith('http')) {
-          url = 'https://' + url.replace('@', '');
-        }
-        result.linkedin_url = url;
-        break;
-      }
-    }
-  }
-  
-  if (!result.github_url || !result.linkedin_url) {
-    const emailMatch = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
-    if (emailMatch) {
-      const email = emailMatch[0];
-      const username = email.split('@')[0];
-      
-      const cleanUsername = username.replace(/[^a-zA-Z0-9_-]/g, '');
-      
-      if (cleanUsername && cleanUsername.length > 0) {
-        if (!result.github_url) {
-          const githubPatterns = [
-            /\bGitHub\b/i,
-            /\bGithub\b/i,
-            /\bgithub\b/i,
-            /\bGit\s*Hub\b/i
-          ];
-          
-          for (const pattern of githubPatterns) {
-            if (pattern.test(text)) {
-              result.github_url = `https://github.com/${cleanUsername}`;
-              break;
-            }
-          }
-        }
-        
-        if (!result.linkedin_url) {
-          const linkedinPatterns = [
-            /\bLinkedIn\b/i,
-            /\bLinkedin\b/i,
-            /\blinkedin\b/i,
-            /\bLinked\s*In\b/i
-          ];
-          
-          for (const pattern of linkedinPatterns) {
-            if (pattern.test(text)) {
-              result.linkedin_url = `https://linkedin.com/in/${cleanUsername}`;
-              break;
-            }
-          }
-        }
-      }
-    }
-  }
-  return result;
-}
-/**
  * Uses Gemini API to analyze the resume text and extract relevant information
  */
 export async function analyzeWithGemini(text: string, extractedLinks: string[] = []): Promise<ParsedResumeData> {
   const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
   const prompt = `
-    Analyze this resume text and extract the following information in JSON format:
+    Analyze this resume text and the following array of extracted links, and extract the following information in JSON format:
     1. Full name
     2. Email address
     3. A list of technical skills and technologies [Here First find the skills section from the resume. If its not present keep it empty]
@@ -283,11 +175,14 @@ export async function analyzeWithGemini(text: string, extractedLinks: string[] =
     7. Work experiences take it from the experience section of the resume (including company name, role, description, start date, end date, and if it's current)
     8. Certifications take it from the certifications section of the resume (including certification name, issuing organization)
     9. Projects: take it from the projects section of the resume (including project name, description, and link if present)
-    10. GitHub URL if present
-    11. LinkedIn URL if present must be like [https://linkedin.com/in/username]
+    10. GitHub URL if present (choose the correct one from the extracted links array, do not guess)
+    11. LinkedIn URL if present (choose the correct one from the extracted links array, do not guess)
 
     Resume text:
     ${text}
+
+    Extracted links:
+    ${JSON.stringify(extractedLinks)}
 
     Return ONLY a raw JSON object with these exact keys (no markdown formatting, no code blocks):
     {
@@ -341,8 +236,6 @@ export async function analyzeWithGemini(text: string, extractedLinks: string[] =
         yearOfStudy = yearsRemaining;
       }
     }
-    // Extract social links with fallback for different casing
-    const socialLinks = extractSocialLinks(text, extractedLinks);
     
     return {
       name: parsed.name || '',
@@ -354,26 +247,12 @@ export async function analyzeWithGemini(text: string, extractedLinks: string[] =
       experiences: (parsed.experiences || []),
       certifications: (parsed.certifications || []),
       projects: (parsed.projects || []),
-      github_url: socialLinks.github_url || parsed.github_url,
-      linkedin_url: socialLinks.linkedin_url || parsed.linkedin_url,
+      github_url: parsed.github_url,
+      linkedin_url: parsed.linkedin_url,
       extracted_links: extractedLinks
     };
-  } catch (error) {
-    console.error('Error parsing Gemini response:', error);
-    return {
-      name: '',
-      email: '',
-      skills: [],
-      domain: undefined,
-      year: undefined,
-      achievements: [],
-      experiences: [],
-      certifications: [],
-      projects: [],
-      github_url: undefined,
-      linkedin_url: undefined,
-      extracted_links: []
-    };
+  } catch (e) {
+    throw new Error('Failed to parse Gemini response: ' + e);
   }
 }
 
