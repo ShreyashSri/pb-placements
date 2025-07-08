@@ -113,11 +113,11 @@ export function Footer() {
             <h3 className="text-sm font-semibold">Contact</h3>
             <div className="flex flex-col gap-2">
               <Link
-                href="mailto:contact@pointblank.com"
+                href="mailto:contact@pointblank.club"
                 className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 <Mail className="h-4 w-4" />
-                contact@pointblank.com
+                contact@pointblank.club
               </Link>
               <p className="text-sm text-muted-foreground">
                 Have questions? We&apos;re here to help.
