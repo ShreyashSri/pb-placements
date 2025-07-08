@@ -158,15 +158,18 @@ function ConfirmPageContent() {
   };
 
   useEffect(() => {
+    const init = async () => {
     const editMode = searchParams.get('edit') === 'true';
     const memberId = searchParams.get('memberId');
 
-    setIsEditMode(editMode);
-    setExistingMemberId(memberId);
+    await setIsEditMode(editMode);
+    await setExistingMemberId(memberId);
 
     if (editMode && memberId) {
-    loadExistingProfile(memberId);
-  } else {
+      await loadExistingProfile(memberId);
+      return;
+    }
+
     try {
       const encodedData = searchParams?.get('data');
       if (encodedData) {
@@ -218,8 +221,10 @@ function ConfirmPageContent() {
       
       setTimeout(() => router.push('/upload'), 3000);
     }
-  }
-  }, [router, searchParams]);
+  };
+
+  init();
+}, [router, searchParams]);
 
   const loadExistingProfile = async (memberId: string) => {
     try {
