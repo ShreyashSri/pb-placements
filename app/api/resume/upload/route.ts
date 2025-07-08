@@ -43,6 +43,34 @@ export async function POST(request: NextRequest) {
     }
 
     const fileBuffer = await resumeFile.arrayBuffer();
+    let extractedText: string;
+    let extractedLinks: string[];
+    let parsedData: any;
+    
+    try {
+      const extractionResult = await extractTextFromPDF(fileBuffer);
+      extractedText = extractionResult.text;
+      extractedLinks = extractionResult.links;
+      if (!extractedText || extractedText.trim().length === 0) {
+        return NextResponse.json({ 
+          success: false, 
+          message: 'Could not extract text from PDF. Please ensure the file contains readable text.' 
+        }, { status: 400 });
+      }
+      parsedData = await analyzeWithGemini(extractedText, extractedLinks);
+      if (!parsedData || !parsedData.name || !parsedData.email) {
+        return NextResponse.json({ 
+          success: false, 
+          message: 'Failed to parse resume. Please ensure the PDF contains readable text and valid contact information.' 
+        }, { status: 400 });
+      }
+    } catch (parseError) {
+      console.error('Error parsing resume:', parseError);
+      return NextResponse.json({ 
+        success: false, 
+        message: 'Failed to parse resume. Please check if the PDF is valid and contains readable text.'
+  }, { status: 400 });
+    }
     
     const username = user.user_metadata?.username || user.email?.split('@')[0] || user.id;
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
@@ -76,10 +104,6 @@ export async function POST(request: NextRequest) {
     }
 
     const publicResumeUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/resume/${data.path}`;
-
-    const extractedText = await extractTextFromPDF(fileBuffer);
-    const parsedData = await analyzeWithGemini(extractedText);
-
     parsedData.resume_url = publicResumeUrl;
 
     return NextResponse.json({
