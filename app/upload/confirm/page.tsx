@@ -158,27 +158,30 @@ function ConfirmPageContent() {
   };
 
   useEffect(() => {
+  const init = async () => {
     const editMode = searchParams.get('edit') === 'true';
     const memberId = searchParams.get('memberId');
 
-    setIsEditMode(editMode);
-    setExistingMemberId(memberId);
+    await setIsEditMode(editMode);
+    await setExistingMemberId(memberId);
 
     if (editMode && memberId) {
-    loadExistingProfile(memberId);
-  } else {
+      await loadExistingProfile(memberId); // <== await this
+      return;
+    }
+
     try {
       const encodedData = searchParams?.get('data');
       if (encodedData) {
         const decodedData = decodeURIComponent(encodedData);
         const parsedData = JSON.parse(atob(decodedData));
-        
+
         const uploadTime = parsedData.uploadTimestamp;
         const currentTime = Date.now();
         if (currentTime - uploadTime > 5 * 60 * 1000) {
           throw new Error('Session expired. Please upload your resume again.');
         }
-        
+
         populateFormAndParsedData(parsedData, parsedData.id || '');
         setLoading(false);
         return;
@@ -202,24 +205,26 @@ function ConfirmPageContent() {
       }
 
       throw new Error('No resume data found');
-
     } catch (err) {
       console.error('Resume loading error:', err);
 
       const message = err instanceof Error
         ? err.message
         : 'Could not load resume data. Please re-upload your resume.';
-      
+
       toast({
         title: 'Error',
         description: message,
         variant: 'destructive',
       });
-      
+
       setTimeout(() => router.push('/upload'), 3000);
     }
-  }
-  }, [router, searchParams]);
+  };
+
+  init(); // run the async setup
+}, [router, searchParams]);
+
 
   const loadExistingProfile = async (memberId: string) => {
     try {
