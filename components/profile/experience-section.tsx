@@ -26,7 +26,11 @@ export function ExperienceSection({ experiences, isEditable }: ExperienceSection
   
   return (
     <div className="space-y-4">
-      {experiences.map((experience) => {
+      {[...experiences]
+       .sort((a, b) =>
+        (a.end_date ? 1 : 0) - (b.end_date ? 1 : 0) ||
+        new Date(b.start_date).getTime() - new Date(a.start_date).getTime())
+        .map((experience) => {
         const startDate = new Date(experience.start_date);
         const endDate = experience.end_date ? new Date(experience.end_date) : null;
         
