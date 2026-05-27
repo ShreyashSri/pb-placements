@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useAuthStore } from "@/lib/authStore";
-import { supabase } from "@/lib/supabaseClient";
 
 function SignInForm() {
   const [email, setEmail] = useState("");
@@ -54,18 +53,6 @@ function SignInForm() {
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.message);
-
-      const origin =
-      typeof window !== "undefined" ? window.location.origin : "https://career.pointblank.club";
-      console.log(origin)
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: `${origin}`,
-      },
-    });
-
-      if (error) throw new Error(error.message);
 
       setLinkSent(true);
       toast({
@@ -115,8 +102,8 @@ function SignInForm() {
                 {loading
                   ? "Sending..."
                   : linkSent
-                  ? "Link Sent"
-                  : "Send Sign-In Link"}
+                    ? "Link Sent"
+                    : "Send Sign-In Link"}
               </Button>
             </CardFooter>
           </form>
@@ -149,10 +136,7 @@ function SignInLoading() {
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
-            <Button
-              className="w-full bg-green-500 hover:bg-green-600"
-              disabled
-            >
+            <Button className="w-full bg-green-500 hover:bg-green-600" disabled>
               Loading...
             </Button>
           </CardFooter>
