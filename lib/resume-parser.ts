@@ -1,9 +1,9 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { Mistral } from '@mistralai/mistralai';
 import { createClient } from '@supabase/supabase-js';
 import { PDFDocument, PDFName } from 'pdf-lib';
 
-// Initialize Gemini AI
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_KEY || '');
+// Initialize Mistral AI
+const mistral = new Mistral({ apiKey: process.env.MISTRAL_API_KEY || '' });
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -198,11 +198,11 @@ async function retryWithDelay<T>(
   
   throw lastError!;
 }
-/** Uses Gemini to add spacing to concatenated text*/
+/** 
+ * Uses Mistral to add spacing to concatenated text
+ */
 async function cleanTextWithAI(text: string): Promise<string> {
   return retryWithDelay(async () => {
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-    
     const prompt = `
      Fix this resume text with strict requirements:
      SECTION IDENTIFICATION:
@@ -256,20 +256,21 @@ async function cleanTextWithAI(text: string): Promise<string> {
       Return only the corrected text with proper spacing, no additional commentary.
       `;
 
-    const result = await model.generateContent(prompt);
-    const response = result.response;
-    return response.text().trim();
+    const result = await mistral.chat.complete({
+      model: 'mistral-small-latest',
+      messages: [{ role: 'user', content: prompt }],
+    });
+    const response = result.choices?.[0]?.message?.content as string ?? ''
+    return response.trim();
   }, 3, 3000).catch((error) => {
     console.error('Error cleaning text with AI:', error);
     return text;
   });
 }
 /**
- * Uses Gemini API to analyze the resume text and extract relevant information
+ * Uses Mistral API to analyze the resume text and extract relevant information
  */
-export async function analyzeWithGemini(text: string, extractedLinks: string[] = []): Promise<ParsedResumeData> {
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
-
+export async function analyzeWithMistral(text: string, extractedLinks: string[] = []): Promise<ParsedResumeData> {
   const prompt = `
     Analyze this resume text and the following array of extracted links, and extract the following information in JSON format:
     1. Full name
@@ -327,9 +328,12 @@ export async function analyzeWithGemini(text: string, extractedLinks: string[] =
   `;
 
   return retryWithDelay(async () => {
-    const result = await model.generateContent(prompt);
-    const response = result.response;
-    const jsonStr = response.text().replace(/```json\n?|\n?```/g, '').trim();
+    const result = await mistral.chat.complete({
+      model: 'mistral-small-latest',
+      messages: [{ role: 'user', content: prompt }],
+    });
+    const response = result.choices?.[0]?.message?.content as string ?? ''
+    const jsonStr = response.replace(/```json\n?|\n?```/g, '').trim();
     
     try {
       const parsed = JSON.parse(jsonStr);
@@ -358,7 +362,7 @@ export async function analyzeWithGemini(text: string, extractedLinks: string[] =
         extracted_links: extractedLinks
       };
     } catch (e) {
-      throw new Error('Failed to parse Gemini response: ' + e);
+      throw new Error('Failed to parse Mistral response: ' + e);
     }
   }, 3, 3000); // 3 retries with 3 second base delay
 }
@@ -397,7 +401,7 @@ export async function parseResumeText(text: string, userId: string): Promise<Par
 
   try {
     const cleanedText = await cleanTextWithAI(text);
-    const parsedData = await analyzeWithGemini(cleanedText);
+    const parsedData = await analyzeWithMistral(cleanedText);
     await updateUserProfile(userId, parsedData.skills);
     return parsedData;
   } catch (error) {

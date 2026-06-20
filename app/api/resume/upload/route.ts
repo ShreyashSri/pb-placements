@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { v4 as uuidv4 } from 'uuid';
-import { extractTextFromPDF, analyzeWithGemini } from '@/lib/resume-parser';
+import { extractTextFromPDF, analyzeWithMistral } from '@/lib/resume-parser';
 import { Buffer } from 'buffer';
 
 export const dynamic = 'force-dynamic';
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
       if (!extractedText?.trim()) {
         return NextResponse.json({ success: false, message: 'Could not extract text from PDF.' }, { status: 400 });
       }
-      parsedData = await analyzeWithGemini(extractedText, extractedLinks);
+      parsedData = await analyzeWithMistral(extractedText, extractedLinks);
       if (!parsedData?.name || !parsedData?.email) {
         return NextResponse.json({ success: false, message: 'Failed to parse key details from resume.' }, { status: 400 });
       }

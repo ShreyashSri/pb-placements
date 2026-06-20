@@ -4,7 +4,7 @@ A modern student talent discovery platform built with Next.js 13, Supabase, and 
 
 ## 🚀 Features
 
-- **AI-Powered Resume Parsing**: Automatically extracts skills, experience, and achievements from PDF resumes using Google's Gemini AI
+- **AI-Powered Resume Parsing**: Automatically extracts skills, experience, and achievements from PDF resumes using Mistral AI
 - **Student Profiles**: Comprehensive profiles with skills, experience, achievements, and links
 - **Smart Directory**: Search and filter students by domain, year, skills, and more
 - **Export Capabilities**: Export student data in multiple formats (PDF, JSON, email lists)
@@ -18,7 +18,7 @@ A modern student talent discovery platform built with Next.js 13, Supabase, and 
 - **Framework**: Next.js 13 (App Router)
 - **Database**: Supabase (PostgreSQL)
 - **Authentication**: Supabase Auth
-- **AI**: Google Generative AI (Gemini)
+- **AI**: Mistral AI
 - **UI Components**: shadcn/ui
 - **Styling**: Tailwind CSS
 - **PDF Processing**: pdf-parse, pdf-lib
@@ -35,7 +35,7 @@ Before setting up the project, ensure you have:
 - Node.js 18+ installed
 - npm or yarn package manager
 - A Supabase account and project
-- A Google AI API key (for Gemini)
+- A Mistral AI API key
 
 ## ⚙️ Environment Variables
 
@@ -46,8 +46,8 @@ Create a `.env.local` file in the root directory with the following variables:
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 DATABASE_URL=supabase_database_url
-# Google AI API Key (for resume parsing)
-GOOGLE_AI_KEY=your_google_ai_api_key
+# Mistral AI API Key (for resume parsing)
+MISTRAL_API_KEY=your_mistral_ai_api_key
 ```
 
 ### Required Environment Variables Explained:
@@ -55,7 +55,7 @@ GOOGLE_AI_KEY=your_google_ai_api_key
 1. **NEXT_PUBLIC_SUPABASE_URL**: Your Supabase project URL (found in Project Settings > API)
 2. **NEXT_PUBLIC_SUPABASE_ANON_KEY**: Your Supabase anonymous key (found in Project Settings > API)
 3. **DATABASE_URL**: The database URL you get from supabase
-4. **GOOGLE_AI_KEY**: Google AI API key for Gemini (get from Google AI Studio)
+4. **MISTRAL_API_KEY**: Mistral AI API key (get from [console.mistral.ai](https://console.mistral.ai/home))
 
 ### Setting up Supabase
 
@@ -137,7 +137,7 @@ The application uses Supabase Auth for authentication:
 
 The AI-powered resume parser:
 - Extracts text from PDF files using `pdf-parse`
-- Uses Google's Gemini AI for intelligent parsing
+- Uses Mistral AI for intelligent parsing
 - Automatically identifies skills, experience, achievements
 - Handles various resume formats and layouts
 
@@ -159,7 +159,7 @@ If you encounter any issues:
 
 1. Check that all environment variables are set correctly
 2. Ensure your Supabase database tables are created
-3. Verify your Google AI API key is valid
+3. Verify your Mistral AI API key is valid
 4. Check the console for any error messages
 
 For additional help, please open an issue in the repository.
