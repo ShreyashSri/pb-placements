@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useAuthStore } from "@/lib/authStore";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import {
   Card,
   CardContent,
@@ -189,7 +188,6 @@ export function ConfirmationForm({ parsedData }: ConfirmationFormProps) {
     setIsSubmitting(true);
 
     try {
-      const supabase = createClientComponentClient();
       const { data: { session }, error } = await supabase.auth.getSession();
 
       if (!session || !session.access_token) {

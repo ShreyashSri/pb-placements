@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient as createServerSupabaseClient } from '@/lib/supabase/server';
 
 import {
   AchievementService,
@@ -63,7 +62,7 @@ export async function DELETE(
     return NextResponse.json({ error: 'DELETE not supported for this type' }, { status: 405 });
   }
 
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {

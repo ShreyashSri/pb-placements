@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -r \"emailRedirectTo\\\\|redirectTo\\\\|exchangeCodeForSession\\\\|PKCE\\\\|implicit\" /home/jayantkageri/Projects/pb-placements --include=\"*.ts\" --include=\"*.tsx\" --include=\"*.js\" --include=\"*.jsx\" ! -path \"*/node_modules/*\" ! -path \"*/.next/*\")",
+      "Bash(grep -r \"emailRedirectTo\\\\|redirectTo\" /home/jayantkageri/Projects/pb-placements --include=\"*.ts\" --include=\"*.tsx\" --include=\"*.js\" --include=\"*.jsx\" ! -path \"*/node_modules/*\" ! -path \"*/.next/*\")",
+      "Bash(node -e \"console.log\\(require\\('./node_modules/next/package.json'\\).version\\)\")",
+      "Bash(node -e \"console.log\\(require\\('./node_modules/@supabase/ssr/package.json'\\).version\\)\")",
+      "Bash(npm uninstall *)",
+      "Bash(npm run *)",
+      "Bash(NEXT_PUBLIC_SUPABASE_URL=https://placeholder.supabase.co NEXT_PUBLIC_SUPABASE_ANON_KEY=placeholder.anon.key NEXT_PUBLIC_DOMAIN=https://careers.pointblank.club MISTRAL_API_KEY=placeholder npm run build)"
+    ]
+  }
+}

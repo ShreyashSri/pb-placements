@@ -1,46 +1,8 @@
-"use client";
-import { useEffect, Suspense } from "react";
-import { supabase } from "@/lib/supabaseClient";
-import { useAuthStore } from "@/lib/authStore";
-import { useRouter, useSearchParams } from "next/navigation";
 import { HeroSection } from "@/components/home/hero-section";
-import { FeaturesSection } from "@/components/home/features-section";
 import { AnimatedGradientBackground } from '@/components/ui/animated-gradient-background';
 import Domains from '@/components/home/domains'
 
-function AuthHandler() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-
-  useEffect(() => {
-    const code = searchParams.get("code");
-    if (code) {
-      supabase.auth
-        .exchangeCodeForSession(code)
-        .then(async ({ data, error }) => {
-          if (error) {
-            console.error("Exchange error:", error);
-          }
-          const { session } = data;
-          if (session) {
-            useAuthStore.getState().setUser(session.user);
-            router.replace(window.location.pathname);
-          }
-        });
-    } else {
-      
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session) {
-          useAuthStore.getState().setUser(session.user);
-        }
-      });
-    }
-  }, [router, searchParams]);
-
-  return null;
-}
-
-function PageContent() {
+export default function UploadPage() {
   return (
     <div className="relative min-h-screen pb-20 overflow-x-hidden">
       {/* Animated gradient background with reduced opacity */}
@@ -58,27 +20,5 @@ function PageContent() {
         </div>
       </div>
     </div>
-  );
-}
-
-function PageLoading() {
-  return (
-    <div className="container py-8 md:py-12">
-      <div className="animate-pulse">
-        <div className="h-32 bg-muted rounded mb-8"></div>
-        <div className="h-64 bg-muted rounded"></div>
-      </div>
-    </div>
-  );
-}
-
-export default function UploadPage() {
-  return (
-    <>
-      <Suspense fallback={null}>
-        <AuthHandler />
-      </Suspense>
-      <PageContent />
-    </>
   );
 }
