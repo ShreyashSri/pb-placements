@@ -47,7 +47,7 @@ const getOrigin = (): string => {
   if (typeof window !== "undefined") {
     return window.location.origin;
   }
-  return process.env.NEXT_PUBLIC_SITE_URL || "https://career.pointblank.club";
+  return process.env.NEXT_PUBLIC_DOMAIN || "https://career.pointblank.club";
 };
 
 function DirectoryContent() {
