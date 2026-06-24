@@ -1,7 +1,6 @@
 import { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+import { createClient } from "@/lib/supabase/server";
 import { 
   MemberService, 
   SkillService, 
@@ -28,6 +27,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SkillSection } from "@/components/profile/skill-section";
 import { CertificationSection } from "@/components/profile/certification-section";
 import { ProjectSection } from "@/components/profile/project-section";
+import { memberUrl, resolveIdFromParam } from "@/lib/utils";
 
 interface ProfilePageProps {
   params: Promise<{
@@ -42,9 +42,10 @@ function formatResumeDisplayName(fullName: string, year: number): string {
 
 export async function generateMetadata({ params }: ProfilePageProps): Promise<Metadata> {
   const { id } = await params;
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = createClient();
   
-  let member = await MemberService.getMemberById(supabase, id);
+  const resolvedId = await resolveIdFromParam(supabase, id);
+  let member = await MemberService.getMemberById(supabase, resolvedId);
   
   if (!member) {
     try {
@@ -70,11 +71,11 @@ export async function generateMetadata({ params }: ProfilePageProps): Promise<Me
 
 export default async function ProfilePage({ params }: ProfilePageProps) {
   const { id } = await params;
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   
-  let member = await MemberService.getMemberById(supabase, id);
-  let actualMemberId = id;
+  let actualMemberId = await resolveIdFromParam(supabase, id);
+  let member = await MemberService.getMemberById(supabase, actualMemberId);
   
   if (!member && user) {
     if (id === 'me' || id === user.id) {
@@ -90,7 +91,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   if (!member && user) {
     const userProfile = await MemberService.getMemberById(supabase, user.id);
     if (userProfile && id !== user.id) {
-      redirect(`/profile/${user.id}`);
+      redirect(memberUrl(userProfile.name, userProfile.id));
     }
   }
   
@@ -98,6 +99,10 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
     console.log('Member not found for ID:', id);
     console.log('Current user ID:', user?.id);
     notFound();
+  }
+
+  if (id === member.id) {
+    redirect(memberUrl(member.name, member.id));
   }
   
   console.log('Member data found:', { 

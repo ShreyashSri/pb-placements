@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle} from "@/components/ui/dialog";
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { supabase } from "@/lib/supabaseClient";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -180,7 +180,6 @@ export function ResumeSection({ resumeUrl, isEditable, userId, displayFileName }
   const [resumeFiles, setResumeFiles] = useState<ResumeFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
-  const supabase = createClientComponentClient();
   const { toast } = useToast();
 
   useEffect(() => {

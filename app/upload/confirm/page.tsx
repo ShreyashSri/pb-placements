@@ -11,7 +11,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { createClient } from '@supabase/supabase-js';
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { supabase } from "@/lib/supabaseClient";
 import {
   Select,
   SelectContent,
@@ -413,7 +413,6 @@ const handleSubmit = async (e: React.FormEvent) => {
   setSaving(true);
 
   try {
-    const supabase = createClientComponentClient();
     const { data: { session }, error } = await supabase.auth.getSession();
 
     if (!session || !session.user) throw new Error("Not authenticated");

@@ -1,12 +1,7 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
-  );
-
   const { email } = await req.json();
 
   if (!email || !email.endsWith("@pointblank.club")) {
@@ -19,7 +14,12 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { data, error } = await supabase.auth.signInWithOtp({
+  // Cookie-backed client: signInWithOtp stores the PKCE code verifier in a
+  // cookie that travels back to the browser, so /api/callback can complete the
+  // exchange when the user clicks the email link.
+  const supabase = createClient();
+
+  const { error } = await supabase.auth.signInWithOtp({
     email,
     options: {
       emailRedirectTo: `${process.env.NEXT_PUBLIC_DOMAIN || "https://careers.pointblank.club"}/api/callback`,

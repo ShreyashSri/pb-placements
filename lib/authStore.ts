@@ -17,15 +17,10 @@ export const initAuthListener = () => {
     useAuthStore.getState().setUser(session?.user ?? null);
   });
 
-  supabase.auth.onAuthStateChange(async (event, session) => {
+  // Cookies are now the single source of truth shared with the server, so no
+  // manual sync to /api/callback is needed — just mirror the user into the store
+  // so the UI reacts to auth changes.
+  supabase.auth.onAuthStateChange((_event, session) => {
     useAuthStore.getState().setUser(session?.user ?? null);
-
-    await fetch("/api/callback", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ event, session }),
-    });
   });
 };
