@@ -101,12 +101,12 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
     notFound();
   }
 
-  if (id === member.id) {
-    redirect(memberUrl(member.name, member.id));
+  if (id === actualMemberId) {
+    redirect(memberUrl(member.name, actualMemberId));
   }
   
   console.log('Member data found:', { 
-    memberId: member.id, 
+    memberId: actualMemberId, 
     memberName: member.name,
     requestedId: id,
     currentUserId: user?.id 
@@ -120,7 +120,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   const certifications = await CertificationService.getMemberCertifications(supabase, actualMemberId);
   const projects = await ProjectService.getMemberProjects(supabase, actualMemberId);
   
-  const isCurrentUser = user?.id === member.id;
+  const isCurrentUser = user?.id === actualMemberId;
   const displayFileName = formatResumeDisplayName(member.name, member.year_of_study);
   
   return (
@@ -204,12 +204,12 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
               <div className="flex flex-col items-center lg:items-start gap-2 w-full lg:w-auto">
                 {isCurrentUser && (
                   <div className="transform hover:scale-110 transition-all duration-300 w:full">
-                    <EditProfileButton memberId={member.id} />
+                    <EditProfileButton memberId={actualMemberId} />
                   </div>
                 )}
                 <div className="transform hover:scale-110 transition-all duration-300 w-full">
                   <ExportProfileButton
-                    memberId={member.id}
+                    memberId={actualMemberId}
                     memberName={member.name}
                     memberEmail={member.email}
                   />
@@ -343,7 +343,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
                   <ResumeSection 
                     resumeUrl={member.resume_url} 
                     isEditable={isCurrentUser}
-                    userId={member.id}
+                    userId={actualMemberId}
                     displayFileName={displayFileName}
                   />
                 </div>
