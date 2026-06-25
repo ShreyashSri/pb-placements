@@ -32,7 +32,6 @@ export async function middleware(req: NextRequest) {
 
   const protectedRoutes = [
     '/api/profile/update',
-    '/api/resume',
     '/api/members',
     '/api/experiences',
     '/api/achievements',
@@ -41,7 +40,10 @@ export async function middleware(req: NextRequest) {
   ];
 
   const pathname = req.nextUrl.pathname;
-
+  
+  if (pathname.startsWith('/api/resume')) {
+  return res;
+}
   if (pathname.startsWith('/api/resume/view')) {
     return res;
   }

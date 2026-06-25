@@ -272,13 +272,20 @@ async function cleanTextWithAI(text: string): Promise<string> {
  */
 export async function analyzeWithMistral(text: string, extractedLinks: string[] = []): Promise<ParsedResumeData> {
   const prompt = `
-    Analyze this resume text and the following array of extracted links, and extract the following information in JSON format:
+    You are a strict parsing engine. Analyze this resume text and the following array of extracted links, and extract the following information in strict JSON format.
+
+    CRITICAL BOUNDARY RULES:
+    - "achievements": Look ONLY under an explicit "Achievements", "Awards", "Honors", or "Accomplishments" section header. If no such dedicated section exists, or if there are no items under it, you MUST return an empty array []. Do NOT pull roles, responsibilities, job tasks, or metrics from the Experience or Projects sections to populate this array.
+    - "experiences": Look under "Experience", "Work History", "Employment", OR "Open Source". If open-source contributions are listed as text points without a specific company, map the company to "Open Source Contributions", set the role to "Open Source Contributor", and group the mentioned technologies or tasks into the description. Use null for dates if they aren't provided.
+    - "projects": Look ONLY under "Projects" or "Academic Projects".
+
+    Fields to extract:
     1. Full name
     2. Email address
-    3. A list of technical skills and technologies [Here First find the skills section from the resume. If its not present keep it empty]
-    4. The primary domain/field analyse it effectively after analysing the skillset (e.g., Frontend Development,cybersecurity,backend development,devops,Data Science etc)
+    3. A list of technical skills and technologies [First find the skills section from the resume. If its not present keep it empty]
+    4. The primary domain/field analyse it effectively after analysing the skillset (e.g., Frontend Development, cybersecurity, backend development, devops, Data Science etc)
     5. Graduation year (YYYY format)
-    6. A list of notable achievements. ONLY extract from a section explicitly labeled "Achievements" or "Awards" in the resume. If no such section exists or no achievements are explicitly listed under it, return an empty array []. Do NOT extract from projects, experiences, or certifications sections. Do NOT infer, guess, or hallucinate achievements. [Dont put any dates for achievements]
+    6. A list of notable achievements. Follow the CRITICAL BOUNDARY RULES closely. Do not guess or infer. [Dont put any dates for achievements]
     7. Work experiences take it from the experience section of the resume (including company name, role, description, start date, end date, and if it's current)
     8. Certifications take it from the certifications section of the resume (including certification name, issuing organization)
     9. Projects: take it from the projects section of the resume (including project name, description, and link if present)
@@ -298,7 +305,7 @@ export async function analyzeWithMistral(text: string, extractedLinks: string[] 
       "skills": ["skill1", "skill2"],
       "domain": "domain name",
       "graduation_year": YYYY or null,
-      "achievements": ["achievement1", "achievement2"],
+      "achievements": [], 
       "experiences": [
         {
           "company": "company name",
@@ -366,6 +373,7 @@ export async function analyzeWithMistral(text: string, extractedLinks: string[] 
     }
   }, 3, 3000); // 3 retries with 3 second base delay
 }
+
 
 /**
  * Updates user profile in Supabase with extracted skills

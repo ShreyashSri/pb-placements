@@ -49,6 +49,13 @@ export async function POST(request: NextRequest) {
     }
 
     const fileBuffer = await resumeFile.arrayBuffer();
+
+    const headerBytes = new Uint8Array(fileBuffer).slice(0, 5);
+    const isPdf = Buffer.from(headerBytes).toString('ascii') === '%PDF-';
+    if (!isPdf) {
+      return NextResponse.json({ success: false, message: 'Invalid PDF file' }, { status: 400 });
+    }
+    
     let parsedData: any;
     
     try {
