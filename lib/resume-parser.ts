@@ -374,7 +374,6 @@ export async function analyzeWithMistral(text: string, extractedLinks: string[] 
   }, 3, 3000); // 3 retries with 3 second base delay
 }
 
-
 /**
  * Updates user profile in Supabase with extracted skills
  */
