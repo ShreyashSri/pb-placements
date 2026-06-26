@@ -598,6 +598,7 @@ export async function analyzeWithMistral(text: string, extractedLinks: string[] 
         email: parsed.email || '',
         skills: parsed.skills || [],
         domain: parsed.domain,
+        year: yearOfStudy,
         achievements: (parsed.achievements || []),
         experiences,
         certifications: (parsed.certifications || []),
