@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ProjectService } from '@/lib/db';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { projectPostSchema } from '@/lib/validations/project';
 
 const createAuthenticatedClient = (req: NextRequest): SupabaseClient | null => {
   const authHeader = req.headers.get('authorization');
@@ -37,15 +38,33 @@ export async function POST(req: NextRequest, context: any) {
     }
 
     const body = await req.json();
-    if (Array.isArray(body)) {
+
+    const result = projectPostSchema.safeParse(body);
+    if (!result.success) {
+      return NextResponse.json(
+        {
+          error: 'Validation failed',
+          details: result.error.flatten().fieldErrors,
+          issues: result.error.issues.map((issue) => ({
+            path: issue.path.join('.'),
+            message: issue.message,
+          })),
+        },
+        { status: 400 }
+      );
+    }
+
+    const validated = result.data;
+
+    if (Array.isArray(validated)) {
       const data = await Promise.all(
-        body.map((project: any) =>
+        validated.map((project) =>
           ProjectService.createProject(supabase, { ...project, member_id: context.params.memberId })
         )
       );
       return NextResponse.json(data);
     } else {
-      const data = await ProjectService.createProject(supabase, { ...body, member_id: context.params.memberId });
+      const data = await ProjectService.createProject(supabase, { ...validated, member_id: context.params.memberId });
       return NextResponse.json(data);
     }
   } catch (error: any) {
