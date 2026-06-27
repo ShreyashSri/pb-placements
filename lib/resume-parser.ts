@@ -275,8 +275,9 @@ export async function analyzeWithMistral(text: string, extractedLinks: string[] 
     You are a strict parsing engine. Analyze this resume text and the following array of extracted links, and extract the following information in strict JSON format.
 
     CRITICAL BOUNDARY RULES:
-    - "achievements": Look ONLY under an explicit "Achievements", "Awards", "Honors", or "Accomplishments" section header. If no such dedicated section exists, or if there are no items under it, you MUST return an empty array []. Do NOT pull roles, responsibilities, job tasks, or metrics from the Experience or Projects sections to populate this array.
-    - "experiences": Look under "Experience", "Work History", "Employment", OR "Open Source". If open-source contributions are listed as text points without a specific company, map the company to "Open Source Contributions", set the role to "Open Source Contributor", and group the mentioned technologies or tasks into the description. Use null for dates if they aren't provided.
+    - CRITICAL BOUNDARY RULES:
+   "achievements": Look ONLY under explicit headings like "Achievements", "Awards", "Honors", or "Accomplishments". Items here MUST be structured as single-line bulleted milestones or honors (e.g., "Meta Hacker Cup Global Rank 1654", "CodeForces Expert"). If a milestone (like GSoC or LFX) is formatted as a full structural role with multiple descriptive work bullet points, do NOT put it here—it belongs strictly in "experiences". If no dedicated achievements heading or single-line honors exist, return an empty array [].
+    - "experiences": Look under "Experience", "Work History", "Employment", OR "Open Source". If open-source contributions are listed as text points without a specific company, map the company to "Open Source Contributions", set the role to "Open Source Contributor". CRITICAL: Do NOT include campus leadership, club memberships, volunteering, or "Positions of Responsibility" (like coding club members, college fest volunteers, or student society roles) in this experiences array. If no formal employment or open-source history exists, return an empty array []
     - "projects": Look ONLY under "Projects" or "Academic Projects".
 
     Fields to extract:

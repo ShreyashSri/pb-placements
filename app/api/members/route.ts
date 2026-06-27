@@ -22,12 +22,13 @@ export async function POST(request: NextRequest) {
     if (!supabase) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (error || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const data = await request.json();
     console.log('Received member data:', data); // Debug log
     
     const member = await MemberService.upsertMember(supabase, {
-      id: data.id,
+      id: user.id,
       name: data.name,
       email: data.email,
       domain: data.domain,
