@@ -39,6 +39,7 @@ jobs:
           push: true
           tags: |
             hemang360/careers:${{ steps.meta.outputs.env }}
+            hemang360/careers:${{ steps.meta.outputs.env }}-latest
             hemang360/careers:${{ steps.meta.outputs.env }}-${{ steps.meta.outputs.sha_short }}
           build-args: |
             NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
