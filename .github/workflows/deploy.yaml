@@ -9,6 +9,9 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-${{ github.ref_name }}
+      cancel-in-progress: false
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -58,9 +61,12 @@ jobs:
           cd infra
           sed -i "s|image: hemang360/careers:.*|image: hemang360/careers:${IMAGE_TAG}|" \
             argocd/website/careers/${ENV}/deployment.yaml
+          grep -q "image: hemang360/careers:${IMAGE_TAG}" \
+            argocd/website/careers/${ENV}/deployment.yaml || { echo "ERROR: sed did not match"; exit 1; }
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add argocd/website/careers/${ENV}/deployment.yaml
           git diff --cached --quiet && echo "No changes to commit" && exit 0
           git commit -m "chore(${ENV}): update careers website image to ${IMAGE_TAG}"
+          git pull --rebase
           git push
