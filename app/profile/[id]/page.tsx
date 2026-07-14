@@ -122,6 +122,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   
   const isCurrentUser = user?.id === member.id;
   const displayFileName = formatResumeDisplayName(member.name, member.year_of_study);
+  const showAchievementsTab = achievements.length > 0 || isCurrentUser;
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black relative overflow-hidden">
@@ -226,19 +227,21 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
             <div className="group transform hover:scale-[1.02] transition-all duration-500">
               <div className="bg-black rounded-2xl border border-gray-800 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden">
                 <Tabs defaultValue="experience" className="w-full">
-                  <TabsList className="grid w-full grid-cols-2 bg-black rounded-t-xl p-0">
+                  <TabsList className={`grid w-full ${showAchievementsTab ? 'grid-cols-2' : 'grid-cols-1'} bg-black rounded-t-xl p-0`}>
                     <TabsTrigger 
                       value="experience" 
-                      className="data-[state=active]:bg-gray-800 data-[state=active]:text-green-400 rounded-tl-lg py-4 border-r border-gray-800"
+                      className={`data-[state=active]:bg-gray-800 data-[state=active]:text-green-400 py-4 ${showAchievementsTab ? 'rounded-tl-lg border-r border-gray-800' : 'rounded-t-lg'}`}
                     >
                       Experience
                     </TabsTrigger>
-                    <TabsTrigger 
-                      value="achievements" 
-                      className="data-[state=active]:bg-gray-800 data-[state=active]:text-green-400 rounded-tr-lg py-4"
-                    >
-                      Achievements
-                    </TabsTrigger>
+                    {showAchievementsTab && (
+                      <TabsTrigger 
+                        value="achievements" 
+                        className="data-[state=active]:bg-gray-800 data-[state=active]:text-green-400 rounded-tr-lg py-4"
+                      >
+                        Achievements
+                      </TabsTrigger>
+                    )}
                   </TabsList>
 
                   <div className="p-6">
@@ -257,20 +260,22 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
                       </div>
                     </TabsContent>
 
-                    <TabsContent value="achievements">
-                      <div className="max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900">
-                        {achievements.length > 0 ? (
-                          <AchievementSection 
-                            achievements={achievements} 
-                            isEditable={isCurrentUser}
-                          />
-                        ) : (
-                          <div className="text-center text-gray-400 py-8">
-                            No achievements information available
-                          </div>
-                        )}
-                      </div>
-                    </TabsContent>
+                    {showAchievementsTab && (
+                      <TabsContent value="achievements">
+                        <div className="max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900">
+                          {achievements.length > 0 ? (
+                            <AchievementSection 
+                              achievements={achievements} 
+                              isEditable={isCurrentUser}
+                            />
+                          ) : (
+                            <div className="text-center text-gray-400 py-8">
+                              No achievements information available
+                            </div>
+                          )}
+                        </div>
+                      </TabsContent>
+                    )}
                   </div>
                 </Tabs>
               </div>
