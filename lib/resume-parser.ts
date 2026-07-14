@@ -54,20 +54,20 @@ export async function extractLinksFromPDF(pdfBuffer: ArrayBuffer): Promise<strin
 
     for (let i = 0; i < pages.length; i++) {
       const page = pages[i];
-
+      
       try {
         // Get the page's annotation array
         const pageDict = page.node;
         const annotations = pageDict.lookup(PDFName.of('Annots'));
-
+        
         if (annotations) {
           // Handle PDFArray of references
           let annotationArray: any[] = [];
-
+          
           if (annotations && typeof annotations === 'object' && 'array' in annotations) {
             // This is a PDFArray with references
             const pdfArray = annotations as { array: any[] };
-
+            
             for (const ref of pdfArray.array) {
               // Resolve the reference to get the actual annotation object
               const annotation = pdfDoc.context.lookup(ref);
@@ -80,14 +80,14 @@ export async function extractLinksFromPDF(pdfBuffer: ArrayBuffer): Promise<strin
           } else {
             annotationArray = [annotations];
           }
-
+          
           for (let j = 0; j < annotationArray.length; j++) {
             const annotation = annotationArray[j];
-
+            
             if (annotation && typeof annotation === 'object') {
               // Get the annotation subtype
               let subtype: string | undefined;
-
+              
               if (annotation.dict) {
                 // This is a PDFDict object
                 const subtypeObj = annotation.dict.get(PDFName.of('Subtype'));
@@ -97,12 +97,12 @@ export async function extractLinksFromPDF(pdfBuffer: ArrayBuffer): Promise<strin
                 const subtypeObj = annotation.lookup(PDFName.of('Subtype'));
                 subtype = subtypeObj?.decodeText?.() || subtypeObj?.toString();
               }
-
+              
               // Check if it's a link annotation
               if (subtype === 'Link' || subtype === '/Link') {
                 // Get the action dictionary
                 let uri: string | undefined;
-
+                
                 if (annotation.dict) {
                   const action = annotation.dict.get(PDFName.of('A'));
                   if (action && action.dict) {
@@ -171,15 +171,15 @@ async function retryWithDelay<T>(
   delay: number = 3000
 ): Promise<T> {
   let lastError: Error;
-
+  
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       return await fn();
     } catch (error) {
       lastError = error as Error;
-
+      
       // Check if it's a rate limit or overload error
-      const isRetryableError =
+      const isRetryableError = 
         error instanceof Error && (
           error.message.includes('overloaded') ||
           error.message.includes('rate limit') ||
@@ -187,18 +187,17 @@ async function retryWithDelay<T>(
           error.message.includes('429') ||
           error.message.includes('quota exceeded')
         );
-
+      
       if (attempt === maxRetries || !isRetryableError) {
         throw lastError;
       }
-
+      
       await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
-
+  
   throw lastError!;
 }
-
 /**
  * Uses Mistral to add spacing to concatenated text
  */
@@ -248,7 +247,7 @@ async function cleanTextWithAI(text: string): Promise<string> {
 
       Examples:
       - "VSCodeand" should become "VSCode and"
-      - "developingcross-platform" should become "developing cross-platform"
+      - "developingcross-platform" should become "developing cross-platform" 
       - "Serverusing" should become "Server using"
 
       Text to fix:
@@ -268,7 +267,6 @@ async function cleanTextWithAI(text: string): Promise<string> {
     return text;
   });
 }
-
 /**
  * Uses Mistral API to analyze the resume text and extract relevant information
  */
