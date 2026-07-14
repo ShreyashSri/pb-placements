@@ -22,7 +22,6 @@ export async function POST(request: NextRequest) {
     if (!supabase) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-   
     const data = await request.json();
     console.log('Received member data:', data); // Debug log
     
