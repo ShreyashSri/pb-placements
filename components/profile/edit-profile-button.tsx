@@ -14,10 +14,10 @@ export function EditProfileButton({ memberId }: EditProfileButtonProps) {
   return (
     <Button
       variant="outline"
-      className="gap-2 w-auto"
+      className="w-full gap-2 px-3 max-[270px]:px-2 max-[270px]:text-xs sm:w-auto"
       onClick={() => router.push(`/upload/confirm?edit=true&memberId=${memberId}`)}
     >
-      <Pencil className="h-4 w-4"/>
+      <Pencil className="h-4 w-4 shrink-0"/>
       Edit Profile
     </Button>
   );
