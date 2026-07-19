@@ -17,10 +17,10 @@ export const memberSchema = z.object({
     .number()
     .int('Year of study must be an integer')
     .min(1, 'Year of study must be at least 1')
-    .max(6, 'Year of study must be at most 6')
+    .max(4, 'Year of study must be at most 4')
     .nullable()
     .optional()
-    .transform(val => val ?? undefined),
+    .transform(val => val ?? null),
   picture_url: z.string().url('Must be a valid URL').optional().or(z.literal('')),
   resume_url: z.string().url('Must be a valid URL').optional().or(z.literal('')),
 });
@@ -47,7 +47,7 @@ export const experienceSchema = z.object({
 export const experiencesSchema = z.array(experienceSchema).default([]);
 
 export const achievementsSchema = z
-  .array(z.string().min(1, 'Achievement cannot be empty').max(1000, 'Achievement too long'))
+  .array(z.string())
   .default([]);
 
 export const linkSchema = z.object({
