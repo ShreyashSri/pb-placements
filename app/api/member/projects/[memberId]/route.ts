@@ -3,18 +3,28 @@ import { ProjectService } from '@/lib/db';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { projectPostSchema } from '@/lib/validations/project';
 
-const createAuthenticatedClient = (req: NextRequest): SupabaseClient | null => {
+const getAuthenticatedUser = async (
+  req: NextRequest
+): Promise<{ supabase: SupabaseClient; user: any } | null> => {
   const authHeader = req.headers.get('authorization');
   const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
   if (!token) return null;
-  
-  return createClient(
+
+  const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       global: { headers: { Authorization: `Bearer ${token}` } }
     }
   );
+
+  try {
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (error || !user) return null;
+    return { supabase, user };
+  } catch {
+    return null;
+  }
 };
 
 export async function GET(req: NextRequest, context: any) {
@@ -32,9 +42,14 @@ export async function GET(req: NextRequest, context: any) {
 
 export async function POST(req: NextRequest, context: any) {
   try {
-    const supabase = createAuthenticatedClient(req);
-    if (!supabase) {
+    const auth = await getAuthenticatedUser(req);
+    if (!auth) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { supabase, user } = auth;
+
+    if (user.id !== context.params.memberId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const body = await req.json();
@@ -74,9 +89,14 @@ export async function POST(req: NextRequest, context: any) {
 
 export async function PATCH(req: NextRequest, context: any) {
   try {
-    const supabase = createAuthenticatedClient(req);
-    if (!supabase) {
+    const auth = await getAuthenticatedUser(req);
+    if (!auth) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { supabase, user } = auth;
+
+    if (user.id !== context.params.memberId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const body = await req.json();
@@ -91,9 +111,14 @@ export async function PATCH(req: NextRequest, context: any) {
 
 export async function DELETE(req: NextRequest, context: any) {
   try {
-    const supabase = createAuthenticatedClient(req);
-    if (!supabase) {
+    const auth = await getAuthenticatedUser(req);
+    if (!auth) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { supabase, user } = auth;
+
+    if (user.id !== context.params.memberId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
     await ProjectService.removeProjectsByMemberId(supabase, context.params.memberId);
     return NextResponse.json({ success: true });
