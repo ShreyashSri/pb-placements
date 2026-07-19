@@ -22,7 +22,7 @@ interface ParsedResumeData {
     company: string;
     role: string;
     description: string;
-    start_date: string;
+    start_date: string | null;
     end_date: string | null;
     is_current: boolean;
   }[];
@@ -54,16 +54,16 @@ export async function extractLinksFromPDF(pdfBuffer: ArrayBuffer): Promise<strin
 
     for (let i = 0; i < pages.length; i++) {
       const page = pages[i];
-
+             
       try {
         // Get the page's annotation array
         const pageDict = page.node;
         const annotations = pageDict.lookup(PDFName.of('Annots'));
-
+                
         if (annotations) {
           // Handle PDFArray of references
           let annotationArray: any[] = [];
-
+          
           if (annotations && typeof annotations === 'object' && 'array' in annotations) {
             // This is a PDFArray with references
             const pdfArray = annotations as { array: any[] };
@@ -80,14 +80,14 @@ export async function extractLinksFromPDF(pdfBuffer: ArrayBuffer): Promise<strin
           } else {
             annotationArray = [annotations];
           }
-
+          
           for (let j = 0; j < annotationArray.length; j++) {
             const annotation = annotationArray[j];
-
+            
             if (annotation && typeof annotation === 'object') {
               // Get the annotation subtype
               let subtype: string | undefined;
-
+              
               if (annotation.dict) {
                 // This is a PDFDict object
                 const subtypeObj = annotation.dict.get(PDFName.of('Subtype'));
@@ -97,12 +97,12 @@ export async function extractLinksFromPDF(pdfBuffer: ArrayBuffer): Promise<strin
                 const subtypeObj = annotation.lookup(PDFName.of('Subtype'));
                 subtype = subtypeObj?.decodeText?.() || subtypeObj?.toString();
               }
-
+              
               // Check if it's a link annotation
               if (subtype === 'Link' || subtype === '/Link') {
                 // Get the action dictionary
                 let uri: string | undefined;
-
+                
                 if (annotation.dict) {
                   const action = annotation.dict.get(PDFName.of('A'));
                   if (action && action.dict) {
@@ -384,20 +384,21 @@ export async function analyzeWithMistral(text: string, extractedLinks: string[] 
     CRITICAL BOUNDARY RULES:
     - "achievements": Look ONLY under explicit headings like "Achievements", "Awards", "Honors", "Extracurriculars" or "Accomplishments". Items here MUST be structured as single-line bulleted milestones or honors (e.g., "Meta Hacker Cup Global Rank 1654", "CodeForces Expert"). If a milestone (like GSoC or LFX) is formatted as a full structural role with multiple descriptive work bullet points, do NOT put it here—it belongs strictly in "experiences". If no dedicated achievements heading or single-line honors exist, return an empty array [].
     - "experiences": Look under "Experience", "Work History", "Employment", OR "Open Source"/"Open Source Contributions".
-      * Open Source sub-entries frequently name the specific project/organization contributed to, often formatted like "ProjectName | short description | contribution stat" (e.g. "RustPython | Python Interpreter in Rust | 8 merged"). Each such distinct project line is its OWN separate experience entry. Use that project/org name (e.g. "RustPython") as the "company" field — do NOT use a generic label when a specific project/org name is given.
+      * Open Source bullet points name the specific project/organization contributed to, and can appear in several formats, not just one: "ProjectName | short description | contribution stat" (e.g. "RustPython | Python Interpreter in Rust | 8 merged"), OR "OrgName - description" (e.g. "DeepChem - Added the DNABERT-2 model wrapper to DeepChem's infrastructure, along with tests for the integration"), OR any other separator such as ":" or "–" between a bolded org/project name and its description. In every one of these formats, the token before the separator is the project/org name and goes in "company"; everything after the separator is the description.
+      * If MULTIPLE open-source bullet points name the SAME project/org (e.g. two separate bullets both starting with "DeepChem -"), merge them into a SINGLE experience entry for that org — combine all of that org's bullets into that one entry's "description" (each bullet still on its own line per LINE BREAK PRESERVATION). Do NOT create duplicate experience entries for the same org.
       * Only when an open-source bullet point genuinely does NOT name any specific project or organization, default the "company" to "Open Source Contributions" and the "role" to "Open Source Contributor".
       * Set "role" to "Open Source Contributor" for all open-source entries regardless of whether a specific project name was found, unless the resume explicitly states a different role/title for that contribution.
-      * Fold any short description/stat on the same line (e.g. "Python Interpreter in Rust", "8 merged") into the "description" field for that entry, along with any bullet points listed underneath it.
+      * Open-source entries frequently have NO explicit dates listed at all (unlike a formal "GSoC" or "LFX Mentorship" role which usually does have dates). When no date is given for a specific open-source entry, set "start_date" to null, "end_date" to null, and "is_current" to false. Do NOT guess, infer, or reuse a date from a different entry.
       * This section MUST be represented as one or more experience entries, never dropped or merged elsewhere.
       * CRITICAL: Do NOT include campus leadership, club memberships, volunteering, or "Positions of Responsibility" (like coding club members, college fest volunteers, or student society roles) in this experiences array.
       * If no formal employment or open-source history exists, return an empty array [].
     - "projects": Look ONLY under "Projects" or "Academic Projects".
 
     COMPANY NAME EXTRACTION (applies to "company" in "experiences"):
-    - Extract ONLY the actual organization/company/project name (e.g., "PrepAiro", "RustPython").
+    - Extract ONLY the actual organization/company/project name (e.g., "PrepAiro", "RustPython", "DeepChem").
     - Do NOT append or merge work-mode, employment-type, or location qualifiers into the company name — this includes words like "Remote", "Hybrid", "On-site", "Onsite", "In-office", "Full-time", "Part-time", "Internship", or city/country names.
     - If the resume shows these next to the company name (e.g., "PrepAiro — Hybrid", "PrepAiro (Remote)", "PrepAiro | Bengaluru | Hybrid"), strip them entirely and keep only the clean company name, e.g. "PrepAiro".
-    - For open-source entries specifically, do not strip the project name itself thinking it's a qualifier — "RustPython" in "RustPython | Python Interpreter in Rust | 8 merged" is the company/project name, not a mode/location word, and must be kept as the company.
+    - For open-source entries specifically, do not strip the project/org name itself thinking it's a qualifier — "RustPython" in "RustPython | Python Interpreter in Rust | 8 merged", or "DeepChem" in "DeepChem - Added the DNABERT-2 model wrapper...", is the company/project name, not a mode/location word, and must be kept as the company.
 
     LINE BREAK PRESERVATION (applies to "description" in both "experiences" and "projects"):
     - The source text uses bullet characters (•, *, -) to separate distinct points. Preserve that structure.
@@ -420,7 +421,7 @@ export async function analyzeWithMistral(text: string, extractedLinks: string[] 
     4. The primary domain/field analyse it effectively after analysing the skillset (e.g., Frontend Development, cybersecurity, backend development, devops, Data Science etc)
     5. Graduation year (YYYY format)
     6. A list of notable achievements. ONLY extract from a section explicitly labeled "Achievements", "Awards", "Honors", "Extracurriculars" or "Accomplishments" in the resume. If no such section exists or no achievements are explicitly listed under it, return an empty array []. Do NOT extract from projects, experiences, or certifications sections. Do NOT infer, guess, or hallucinate achievements. [Dont put any dates for achievements]
-    7. Work experiences take it from the experience section of the resume (including company name, role, description, start date, end date, and if it's current). Follow the COMPANY NAME EXTRACTION, LINE BREAK PRESERVATION, and INLINE LINK PRESERVATION rules. Each distinct open-source project entry counts as its own separate experience.
+    7. Work experiences take it from the experience section of the resume (including company name, role, description, start date, end date, and if it's current). Follow the COMPANY NAME EXTRACTION, LINE BREAK PRESERVATION, and INLINE LINK PRESERVATION rules. Each distinct open-source project/org counts as its own separate experience (merging same-org bullets into one entry per the "experiences" rule above), and may have null start/end dates if none are given.
     8. Certifications take it from the certifications section of the resume (including certification name, issuing organization)
     9. Projects: take it from the projects section of the resume (including project name, description, and link if present). Follow the LINE BREAK PRESERVATION and INLINE LINK PRESERVATION rules for description.
     10. GitHub URL if present (choose the correct one from the extracted links array, do not guess)
@@ -432,7 +433,7 @@ export async function analyzeWithMistral(text: string, extractedLinks: string[] 
     Extracted links:
     ${JSON.stringify(extractedLinks)}
 
-    Return ONLY a raw JSON object with these exact keys (no markdown formatting, no code blocks). Remember: "company" must be a clean name with no mode/location qualifiers (but DO keep a specific open-source project name as the company when one is given), description fields must use literal "\\n" characters between bullet points, properly escaped as valid JSON string content, and any inline "(https://...)" URL found in the source text must be preserved verbatim inside the relevant bullet in the description.
+    Return ONLY a raw JSON object with these exact keys (no markdown formatting, no code blocks). Remember: "company" must be a clean name with no mode/location qualifiers (but DO keep a specific open-source project/org name as the company when one is given, and merge repeated bullets for the same org into one entry), description fields must use literal "\\n" characters between bullet points, properly escaped as valid JSON string content, any inline "(https://...)" URL found in the source text must be preserved verbatim inside the relevant bullet in the description, and start_date/end_date may be null when the resume gives no date for that entry.
     {
       "name": "full name",
       "email": "email address",
@@ -442,10 +443,10 @@ export async function analyzeWithMistral(text: string, extractedLinks: string[] 
       "achievements": [], 
       "experiences": [
         {
-          "company": "clean company or open-source project name, e.g. PrepAiro or RustPython",
+          "company": "clean company or open-source project/org name, e.g. PrepAiro, RustPython, or DeepChem",
           "role": "job title or Open Source Contributor",
           "description": "bullet one\\nbullet two with a link (https://example.com)\\nbullet three",
-          "start_date": "YYYY-MM-DD",
+          "start_date": "YYYY-MM-DD or null",
           "end_date": "YYYY-MM-DD or null",
           "is_current": boolean
         }
@@ -518,8 +519,8 @@ export async function analyzeWithMistral(text: string, extractedLinks: string[] 
 
       // Strip any work-mode / location qualifiers that slipped into the
       // company name (e.g. "PrepAiro Hybrid", "PrepAiro - Remote", "PrepAiro (Onsite)").
-      // Deliberately does NOT touch a project name like "RustPython" since that
-      // doesn't match any of the mode/location keywords below.
+      // Deliberately does NOT touch a project/org name like "RustPython" or
+      // "DeepChem" since those don't match any of the mode/location keywords below.
       const normalizeCompany = (company: string | undefined | null): string => {
         if (!company) return '';
         return company
@@ -530,11 +531,51 @@ export async function analyzeWithMistral(text: string, extractedLinks: string[] 
           .trim();
       };
 
-      const experiences = (parsed.experiences || []).map((exp: any) => ({
+      // Merge duplicate experience entries that share the same normalized
+      // company name (e.g. two separate "DeepChem - ..." open-source bullets)
+      // into one entry, combining their descriptions.
+      const mergeDuplicateCompanies = (
+        exps: { company: string; role: string; description: string; start_date: string | null; end_date: string | null; is_current: boolean }[]
+      ) => {
+        const merged: typeof exps = [];
+        const indexByCompany = new Map<string, number>();
+
+        for (const exp of exps) {
+          const key = (exp.company || '').trim().toLowerCase();
+          if (key && indexByCompany.has(key)) {
+            const existingIndex = indexByCompany.get(key)!;
+            const existing = merged[existingIndex];
+            const combinedDescription = [existing.description, exp.description]
+              .filter(Boolean)
+              .join('\n');
+            merged[existingIndex] = {
+              ...existing,
+              description: combinedDescription,
+              // Prefer whichever entry actually has dates, if either does
+              start_date: existing.start_date ?? exp.start_date,
+              end_date: existing.end_date ?? exp.end_date,
+              is_current: existing.is_current || exp.is_current,
+            };
+          } else {
+            merged.push(exp);
+            if (key) {
+              indexByCompany.set(key, merged.length - 1);
+            }
+          }
+        }
+
+        return merged;
+      };
+
+      const rawExperiences = (parsed.experiences || []).map((exp: any) => ({
         ...exp,
         company: normalizeCompany(exp.company),
         description: normalizeDescription(exp.description),
+        start_date: exp.start_date || null,
+        end_date: exp.end_date || null,
       }));
+
+      const experiences = mergeDuplicateCompanies(rawExperiences);
 
       const projects = (parsed.projects || []).map((proj: any) => ({
         ...proj,
