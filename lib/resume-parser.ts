@@ -495,27 +495,33 @@ export async function analyzeWithMistral(text: string, extractedLinks: string[] 
         }
       }
 
-      // Normalize description line breaks and ensure each line ends with a period
+     // Normalize description line breaks, ensure each line ends with a period,
+      // and prefix each line with a bullet character for display
       const normalizeDescription = (desc: string | undefined | null): string => {
         if (!desc) return '';
         return desc
           .replace(/\r\n/g, '\n')
           .split('\n')
           .map(line => {
-            const trimmed = line.trim();
+            let trimmed = line.trim();
             if (!trimmed) return trimmed;
+
+            // Strip any bullet character the model may have already added,
+            // so we don't end up with double bullets like "• • text"
+            trimmed = trimmed.replace(/^[•*\-]\s*/, '');
+
             // If the line ends with a URL in parentheses, add the period
-            // BEFORE the parenthetical rather than after it, e.g.
-            // "All merged pull requests: My Pull Requests (https://...)."
-            // -> "All merged pull requests: My Pull Requests. (https://...)"
+            // BEFORE the parenthetical rather than after it
             const urlTrailingMatch = trimmed.match(/^(.*\S)(\s*\((https?:\/\/[^\s)]+)\))$/);
             if (urlTrailingMatch) {
               const [, mainText, , url] = urlTrailingMatch;
               const punctuated = /[.!?:;]$/.test(mainText) ? mainText : `${mainText}.`;
-              return `${punctuated} (${url})`;
+              return `• ${punctuated} (${url})`;
             }
+
             // Add a period if the line doesn't already end with terminal punctuation
-            return /[.!?:;]$/.test(trimmed) ? trimmed : `${trimmed}.`;
+            const punctuated = /[.!?:;]$/.test(trimmed) ? trimmed : `${trimmed}.`;
+            return `• ${punctuated}`;
           })
           .filter(line => line.length > 0)
           .join('\n')
