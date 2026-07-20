@@ -65,7 +65,7 @@ export interface Project {
   member_id: string;
   name: string;
   description: string;
-  link: string;
+  link?: string;
 }
 
 // Initialize database tables if they don't exist
