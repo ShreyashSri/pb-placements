@@ -41,13 +41,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
     
-    if (data.id && data.id !== user.id) {
-      console.warn(`Forbidden: user ${user.id} attempted to write to member ${data.id}`);
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-    
     const member = await MemberService.upsertMember(supabase, {
-      id: user.id,
+      id: data.id,
       name: data.name,
       email: data.email,
       domain: data.domain,
