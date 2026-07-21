@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Code2, Github, Linkedin, Mail, Twitter } from "lucide-react";
+import {Mail} from "lucide-react";
+import { FaXTwitter,FaLinkedin,FaGithub} from "react-icons/fa6";
 import Logo from "../ui/logo"; 
 
 export function Footer() {
@@ -22,16 +23,16 @@ export function Footer() {
                 rel="noopener noreferrer"
                 className="text-muted-foreground hover:text-foreground transition-colors"
               >
-                <Github className="h-5 w-5" />
+                <FaGithub className="h-5 w-5" />
                 <span className="sr-only">GitHub</span>
               </Link>
               <Link
-                href="https://www.linkedin.com/company/point-blank-d/posts/?feedView=all"
+                href="https://www.linkedin.com/company/pointblank-club/posts/?feedView=all"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-muted-foreground hover:text-foreground transition-colors"
               >
-                <Linkedin className="h-5 w-5" />
+                <FaLinkedin className="h-5 w-5" />
                 <span className="sr-only">LinkedIn</span>
               </Link>
               <Link
@@ -40,7 +41,7 @@ export function Footer() {
                 rel="noopener noreferrer"
                 className="text-muted-foreground hover:text-foreground transition-colors"
               >
-                <Twitter className="h-5 w-5" />
+                <FaXTwitter className="h-5 w-5" />
                 <span className="sr-only">Twitter</span>
               </Link>
             </div>
