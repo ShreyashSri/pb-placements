@@ -6,7 +6,7 @@ const allowedOrigins = ['http://localhost:3000', 'https://careers.pointblank.clu
 
 function addCors(req: NextRequest, res: NextResponse): NextResponse {
   const origin = req.headers.get('origin');
-  if (origin && (origin.startsWith('http://localhost') || allowedOrigins.includes(origin))) {
+  if (origin && allowedOrigins.includes(origin)) {
     res.headers.set('Access-Control-Allow-Origin', origin);
     res.headers.set('Access-Control-Allow-Credentials', 'true');
     res.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
