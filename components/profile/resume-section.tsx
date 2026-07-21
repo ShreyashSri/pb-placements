@@ -370,9 +370,6 @@ export function ResumeSection({ resumeUrl, isEditable, userId, displayFileName }
           <FileText className="h-6 w-6 text-muted-foreground" />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium truncate">{displayFileName || 'Resume.pdf'}</p>
-            <p className="text-xs text-muted-foreground truncate">
-              Last updated: {new Date().toISOString().slice(0, 10)}
-            </p>
           </div>
           <ResumeModal 
             resumeUrl={proxyUrl} 

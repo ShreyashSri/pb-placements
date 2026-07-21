@@ -49,6 +49,7 @@ const nextConfig = {
       },
     ];
   },
+  output: "standalone",
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -59,7 +60,7 @@ const nextConfig = {
   webpack: (config, { isServer }) => {
     // Disable webpack caching to prevent ENOENT errors
     config.cache = false;
-    
+
     // Add worker support
     if (!isServer) {
       config.resolve.fallback = {
@@ -71,7 +72,7 @@ const nextConfig = {
         worker_threads: false,
       };
     }
-    
+
     return config;
   },
 };
