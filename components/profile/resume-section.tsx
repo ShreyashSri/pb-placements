@@ -335,35 +335,13 @@ export function ResumeSection({ resumeUrl, isEditable, userId, displayFileName }
 
       if (isLatest && updatedFiles && updatedFiles.length > 0) {
         const newLatest = updatedFiles[0];
-        const { data: { session } } = await supabase.auth.getSession();
-        
         toast({
-          title: "Processing new latest resume",
-          description: "Syncing your profile details to the new latest resume version...",
+          title: 'Switching to new latest resume',
+          description: 'Redirecting to update your profile...',
         });
-
-        const reparseRes = await fetch('/api/resume/reparse', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${session?.access_token}`,
-          },
-          body: JSON.stringify({ filePath: `resumes/${user.id}/${newLatest.name}` }),
-        });
-
-        if (reparseRes.ok) {
-          const parsedData = await reparseRes.json();
-          localStorage.setItem('reparsed_resume', JSON.stringify(parsedData));
-          router.push(`/upload/confirm?edit=true&memberId=${user.id}`);
-        } else {
-          const errorBody = await reparseRes.json().catch(() => ({}));
-          console.error('Reparse failed:', reparseRes.status, errorBody);
-          toast({
-            title: "Profile not updated",
-            description: errorBody.message || "Could not reparse the next resume version. The file was deleted but your profile details were not updated.",
-            variant: "destructive",
-          });
-        }
+        router.push(
+          `/upload/confirm?edit=true&memberId=${user.id}&file=${encodeURIComponent(`resumes/${user.id}/${newLatest.name}`)}`
+        );
       }
       
     } catch (error) {

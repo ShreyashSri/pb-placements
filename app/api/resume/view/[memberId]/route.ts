@@ -2,7 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { MemberService } from '@/lib/db';
 import { createClient } from '@supabase/supabase-js';
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const SAFE_FILENAME_RE = /^[\w\-\.]+\.pdf$/;
+
 async function getMemberAndUrl(memberId: string, filename?: string | null) {
+  if (!UUID_RE.test(memberId)) {
+    return { member: null, resumeUrl: null, invalidMemberId: true };
+  }
+
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -11,13 +18,12 @@ async function getMemberAndUrl(memberId: string, filename?: string | null) {
   let resumeUrl = member?.resume_url;
 
   if (filename) {
-    // Sanitize filename to avoid path traversal (keep only alphanumeric, underscores, hyphens, and single dot for extension)
-    const sanitizedFilename = filename.replace(/[^a-zA-Z0-9_\-\.]/g, '');
-    if (sanitizedFilename && sanitizedFilename.endsWith('.pdf')) {
+    // Strict filename validation: only word chars, hyphens, dots + .pdf extension (no double dots)
+    if (SAFE_FILENAME_RE.test(filename) && !filename.includes('..')) {
       const userFolder = `resumes/${memberId}`;
       const { data } = supabase.storage
         .from('resume')
-        .getPublicUrl(`${userFolder}/${sanitizedFilename}`);
+        .getPublicUrl(`${userFolder}/${filename}`);
       if (data?.publicUrl) {
         resumeUrl = data.publicUrl;
       }
@@ -35,8 +41,9 @@ export async function HEAD(req: NextRequest, { params }: { params: { memberId: s
     const searchParams = req.nextUrl.searchParams;
     const filename = searchParams.get('filename');
 
-    const { resumeUrl } = await getMemberAndUrl(memberId, filename);
-    if (!resumeUrl) return new NextResponse(null, { status: 404 });
+    const result = await getMemberAndUrl(memberId, filename);
+    if (result.invalidMemberId) return new NextResponse(null, { status: 400 });
+    if (!result.resumeUrl) return new NextResponse(null, { status: 404 });
 
     return new NextResponse(null, { status: 200 });
   } catch (error) {
@@ -54,10 +61,14 @@ export async function GET(req: NextRequest, { params }: { params: { memberId: st
     const searchParams = req.nextUrl.searchParams;
     const filename = searchParams.get('filename');
 
-    const { member, resumeUrl } = await getMemberAndUrl(memberId, filename);
-    if (!member || !resumeUrl) {
+    const result = await getMemberAndUrl(memberId, filename);
+    if (result.invalidMemberId) {
+      return NextResponse.json({ message: 'Invalid memberId' }, { status: 400 });
+    }
+    if (!result.member || !result.resumeUrl) {
       return NextResponse.json({ message: 'Resume not found' }, { status: 404 });
     }
+    const { member, resumeUrl } = result;
 
     const upstream = await fetch(resumeUrl);
     if (!upstream.ok || !upstream.body) {

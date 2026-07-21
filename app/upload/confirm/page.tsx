@@ -7,8 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { v4 as uuidv4 } from 'uuid';
-import { createClient } from '@supabase/supabase-js';
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/lib/supabaseClient";
@@ -159,29 +157,52 @@ function ConfirmPageContent() {
 
   useEffect(() => {
     const init = async () => {
+    const file = searchParams.get('file');
     const editMode = searchParams.get('edit') === 'true';
 
-    if (editMode) {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) {
-        toast({
-          title: 'Error',
-          description: 'You must be logged in to edit your profile.',
-          variant: 'destructive',
-        });
-        router.push('/upload');
-        return;
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) {
+      toast({
+        title: 'Error',
+        description: 'You must be logged in to edit your profile.',
+        variant: 'destructive',
+      });
+      router.push('/login');
+      return;
+    }
+
+    const memberId = session.user.id;
+    await setIsEditMode(editMode);
+    await setExistingMemberId(memberId);
+
+    if (!file) {
+      toast({
+        title: 'Error',
+        description: 'No resume file specified. Please upload your resume again.',
+        variant: 'destructive',
+      });
+      setTimeout(() => router.push('/upload'), 2000);
+      return;
+    }
+
+    try {
+      const reparseRes = await fetch('/api/resume/upload', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ filePath: file }),
+      });
+
+      if (!reparseRes.ok) {
+        const err = await reparseRes.json().catch(() => ({}));
+        throw new Error(err.message || 'Failed to parse resume');
       }
 
-      const memberId = session.user.id;
-      await setIsEditMode(editMode);
-      await setExistingMemberId(memberId);
+      const parsedData = await reparseRes.json();
 
-      const reparsed = localStorage.getItem('reparsed_resume');
-      if (reparsed) {
-        try {
-          const parsedData = JSON.parse(reparsed);
-          // Fetch DB profile silently (don't populate form yet) to get picture_url etc.
+      if (editMode) {
           const existingProfile = await loadExistingProfile(memberId, true);
           const mergedData = {
             ...existingProfile,
@@ -190,77 +211,25 @@ function ConfirmPageContent() {
             resume_url: parsedData.resume_url || existingProfile?.resume_url,
           };
           populateFormAndParsedData(mergedData, memberId);
-          if (existingProfile?.picture_url || parsedData.picture_url) {
-            setPicturePreview(existingProfile?.picture_url || parsedData.picture_url);
-          }
-          localStorage.removeItem('reparsed_resume');
-          setLoading(false);
-        } catch (e) {
-          console.error('Error parsing reparsed_resume from localStorage:', e);
-          // Fall through to load existing profile normally
-          await loadExistingProfile(memberId);
+          if (existingProfile?.picture_url) setPicturePreview(existingProfile.picture_url);
+        } else {
+          populateFormAndParsedData(parsedData, parsedData.id || '');
         }
-      } else {
-        await loadExistingProfile(memberId);
-      }
-      return;
-    }
 
-    try {
-      const encodedData = searchParams?.get('data');
-      if (encodedData) {
-        const decodedData = decodeURIComponent(encodedData);
-        const parsedData = JSON.parse(atob(decodedData));
-        
-        const uploadTime = parsedData.uploadTimestamp;
-        const currentTime = Date.now();
-        if (currentTime - uploadTime > 5 * 60 * 1000) {
-          throw new Error('Session expired. Please upload your resume again.');
-        }
-        
-        populateFormAndParsedData(parsedData, parsedData.id || '');
         setLoading(false);
-        return;
+      } catch (err: any) {
+        console.error('Resume loading error:', err);
+        toast({
+          title: 'Error',
+          description: err.message || 'Could not load resume data. Please re-upload your resume.',
+          variant: 'destructive',
+        });
+        setTimeout(() => router.push('/upload'), 3000);
       }
+    };
 
-      const parsed = localStorage.getItem('parsed_resume');
-      if (parsed) {
-        const data = JSON.parse(parsed);
-        populateFormAndParsedData(data, data.id || '');
-        setLoading(false);
-        return;
-      }
-
-      const tempStorage = document.getElementById('temp-resume-data');
-      if (tempStorage?.textContent) {
-        const parsedData = JSON.parse(tempStorage.textContent);
-        populateFormAndParsedData(parsedData, parsedData.id || '');
-        tempStorage.remove();
-        setLoading(false);
-        return;
-      }
-
-      throw new Error('No resume data found');
-
-    } catch (err) {
-      console.error('Resume loading error:', err);
-
-      const message = err instanceof Error
-        ? err.message
-        : 'Could not load resume data. Please re-upload your resume.';
-      
-      toast({
-        title: 'Error',
-        description: message,
-        variant: 'destructive',
-      });
-      
-      setTimeout(() => router.push('/upload'), 3000);
-    }
-  };
-
-  init();
-}, [router, searchParams]);
+    init();
+  }, [router, searchParams]);
 
   const loadExistingProfile = async (memberId: string, skipPopulate = false) => {
     try {
