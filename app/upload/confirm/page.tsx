@@ -160,13 +160,21 @@ function ConfirmPageContent() {
   useEffect(() => {
     const init = async () => {
     const editMode = searchParams.get('edit') === 'true';
-    const memberId = searchParams.get('memberId');
 
-    await setIsEditMode(editMode);
-    await setExistingMemberId(memberId);
-
-    if (editMode && memberId) {
-      await loadExistingProfile(memberId);
+    if (editMode) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        toast({
+          title: 'Error',
+          description: 'You must be logged in to edit your profile.',
+          variant: 'destructive',
+        });
+        router.push('/upload');
+        return;
+      }
+      await setIsEditMode(editMode);
+      await setExistingMemberId(session.user.id);
+      await loadExistingProfile(session.user.id);
       return;
     }
 

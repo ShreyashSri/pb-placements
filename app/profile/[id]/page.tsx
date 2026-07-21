@@ -205,7 +205,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
               <div className="flex min-w-0 flex-col items-stretch lg:items-start gap-2 w-full lg:w-auto">
                 {isCurrentUser && (
                   <div className="transform hover:scale-110 transition-all duration-300 w:full">
-                    <EditProfileButton memberId={actualMemberId} />
+                    <EditProfileButton />
                   </div>
                 )}
                 <div className="transform transition-all duration-300 sm:hover:scale-110 w-full">
