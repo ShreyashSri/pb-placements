@@ -7,7 +7,7 @@ export interface Member {
   email: string;
   picture_url: string;
   domain: string;
-  year_of_study: number | null;
+  year_of_study: number ;
   resume_url: string;
   created_at: string;
   updated_at: string;

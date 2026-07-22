@@ -17,9 +17,7 @@ export const memberSchema = z.object({
     .number()
     .int('Year of study must be an integer')
     .min(1, 'Year of study must be at least 1')
-    .max(4, 'Year of study must be at most 4')
-    .nullable()
-    .optional(),
+    .max(4, 'Year of study must be at most 4'),
   picture_url: z.string().url('Must be a valid URL').optional().or(z.literal('')),
   resume_url: z.string().url('Must be a valid URL').optional().or(z.literal('')),
 });
