@@ -143,7 +143,9 @@ function ConfirmPageContent() {
       name: data.name || '',
       email: data.email || '',
       domain: data.domain || '',
-      year_of_study: (data.year_of_study || data.year)?.toString() || '',
+      year_of_study: data.year_of_study === null
+        ? 'alumni'
+        : (data.year_of_study || data.year)?.toString() || '',
       github_url: githubLink,
       linkedin_url: linkedinLink,
       experiences: experiences,
@@ -157,75 +159,104 @@ function ConfirmPageContent() {
 
   useEffect(() => {
     const init = async () => {
-    const file = searchParams.get('file');
-    const editMode = searchParams.get('edit') === 'true';
+      const file = searchParams.get('file');
+      const editMode = searchParams.get('edit') === 'true';
 
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) {
-      toast({
-        title: 'Error',
-        description: 'You must be logged in to edit your profile.',
-        variant: 'destructive',
-      });
-      router.push('/login');
-      return;
-    }
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        toast({
+          title: 'Error',
+          description: 'You must be logged in to edit your profile.',
+          variant: 'destructive',
+        });
+        router.push('/login');
+        return;
+      }
 
-    const memberId = session.user.id;
-    await setIsEditMode(editMode);
-    await setExistingMemberId(memberId);
+      const memberId = session.user.id;
+      setIsEditMode(editMode);
+      setExistingMemberId(memberId);
 
-    if (!file) {
+      // Case 1: Edit mode, no file param -> Skip resume parsing entirely.
+      if (editMode && !file) {
+        try {
+          await loadExistingProfile(memberId);
+        } catch (err: any) {
+          console.error('Error loading profile in edit mode:', err);
+        }
+        return;
+      }
+
+      // Case 2: File param present -> Check cache or parse.
+      if (file) {
+        try {
+          let parsedData: any = null;
+
+          // Check sessionStorage for cached parsed data
+          if (typeof window !== 'undefined') {
+            const cached = sessionStorage.getItem(`parsed-resume-${file}`);
+            if (cached) {
+              try {
+                parsedData = JSON.parse(cached);
+              } catch (e) {
+                console.error('Failed to parse cached resume data:', e);
+              }
+            }
+          }
+
+          if (!parsedData) {
+            // Cache miss: fall back to reparse via /api/resume/upload
+            const reparseRes = await fetch('/api/resume/upload', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${session.access_token}`,
+              },
+              body: JSON.stringify({ filePath: file }),
+            });
+
+            if (!reparseRes.ok) {
+              const err = await reparseRes.json().catch(() => ({}));
+              throw new Error(err.message || 'Failed to parse resume');
+            }
+
+            parsedData = await reparseRes.json();
+          }
+
+          if (editMode) {
+            const existingProfile = await loadExistingProfile(memberId, true);
+            const mergedData = {
+              ...existingProfile,
+              ...parsedData,
+              picture_url: existingProfile?.picture_url || parsedData.picture_url,
+              resume_url: parsedData.resume_url || existingProfile?.resume_url,
+            };
+            populateFormAndParsedData(mergedData, memberId);
+            if (existingProfile?.picture_url) setPicturePreview(existingProfile.picture_url);
+          } else {
+            populateFormAndParsedData(parsedData, parsedData.id || '');
+          }
+
+          setLoading(false);
+        } catch (err: any) {
+          console.error('Resume loading error:', err);
+          toast({
+            title: 'Error',
+            description: err.message || 'Could not load resume data. Please re-upload your resume.',
+            variant: 'destructive',
+          });
+          setTimeout(() => router.push('/upload'), 3000);
+        }
+        return;
+      }
+
+      // Case 3: Neither edit mode nor file param -> Error + redirect to /upload.
       toast({
         title: 'Error',
         description: 'No resume file specified. Please upload your resume again.',
         variant: 'destructive',
       });
       setTimeout(() => router.push('/upload'), 2000);
-      return;
-    }
-
-    try {
-      const reparseRes = await fetch('/api/resume/upload', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ filePath: file }),
-      });
-
-      if (!reparseRes.ok) {
-        const err = await reparseRes.json().catch(() => ({}));
-        throw new Error(err.message || 'Failed to parse resume');
-      }
-
-      const parsedData = await reparseRes.json();
-
-      if (editMode) {
-          const existingProfile = await loadExistingProfile(memberId, true);
-          const mergedData = {
-            ...existingProfile,
-            ...parsedData,
-            picture_url: existingProfile?.picture_url || parsedData.picture_url,
-            resume_url: parsedData.resume_url || existingProfile?.resume_url,
-          };
-          populateFormAndParsedData(mergedData, memberId);
-          if (existingProfile?.picture_url) setPicturePreview(existingProfile.picture_url);
-        } else {
-          populateFormAndParsedData(parsedData, parsedData.id || '');
-        }
-
-        setLoading(false);
-      } catch (err: any) {
-        console.error('Resume loading error:', err);
-        toast({
-          title: 'Error',
-          description: err.message || 'Could not load resume data. Please re-upload your resume.',
-          variant: 'destructive',
-        });
-        setTimeout(() => router.push('/upload'), 3000);
-      }
     };
 
     init();
@@ -240,6 +271,7 @@ function ConfirmPageContent() {
         achievementsRes,
         linksRes,
         certificationsRes,
+        projectsRes,
       ] = await Promise.all([
         fetch(`/api/member/profile/${memberId}`),
         fetch(`/api/member/skills/${memberId}`),
@@ -247,6 +279,7 @@ function ConfirmPageContent() {
         fetch(`/api/member/achievements/${memberId}`),
         fetch(`/api/member/links/${memberId}`),
         fetch(`/api/member/certifications/${memberId}`),
+        fetch(`/api/member/projects/${memberId}`),
       ]);
 
       if (!memberRes.ok) throw new Error('Failed to load member data');
@@ -257,6 +290,7 @@ function ConfirmPageContent() {
       const achievementsData = achievementsRes.ok ? await achievementsRes.json() : [];
       const linksData = linksRes.ok ? await linksRes.json() : [];
       const certificationsData = certificationsRes.ok ? await certificationsRes.json() : [];
+      const projectsData = projectsRes.ok ? await projectsRes.json() : [];
 
       const combinedData = {
         ...memberData,
@@ -265,6 +299,7 @@ function ConfirmPageContent() {
         achievements: achievementsData,
         links: linksData,
         certifications: certificationsData,
+        projects: projectsData,
       };
 
       if (!skipPopulate) {
@@ -473,7 +508,9 @@ const handleSubmit = async (e: React.FormEvent) => {
         name: formData.name.trim(),
         email: formData.email.trim(),
         domain: formData.domain.trim(),
-        year_of_study: formData.year_of_study ? parseInt(formData.year_of_study) : null,
+        year_of_study: formData.year_of_study && formData.year_of_study !== 'alumni'
+          ? parseInt(formData.year_of_study)
+          : null,
         picture_url: pictureUrl,
         resume_url: formData.resume_url,
       },

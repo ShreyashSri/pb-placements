@@ -171,6 +171,10 @@ export function ResumeUpload() {
         description: "Your resume has been uploaded and parsed. Redirecting to confirmation page...",
       });
       
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem(`parsed-resume-${data.file_path}`, JSON.stringify(data));
+      }
+      
       router.push(`/upload/confirm?file=${encodeURIComponent(data.file_path)}`);
       
     } catch (error) {
